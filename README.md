@@ -4,6 +4,8 @@ A full-stack campus community portal: **React 18 + Vite** on the front, **Expres
 
 Students and staff publish class notes, project write-ups and study materials; staff post official **notices**, **exam routines** and **academic-calendar** entries; and everyone can **rate, comment on and discuss** posts and ask **questions** in the community Q&A.
 
+![University of South Asia community portal — home page](docs/screenshot.png)
+
 ---
 
 ## Stack
