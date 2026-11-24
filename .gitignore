@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+npm-debug.log*
+.DS_Store
+.vite/
+
+# agent tooling metadata
+.commandcode/
+
+# runtime uploads — keep the directory, ignore the contents
+src/backend/uploads/*
+!src/backend/uploads/.gitkeep

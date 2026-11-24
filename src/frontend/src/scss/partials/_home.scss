@@ -1,0 +1,755 @@
+/* Home = the front page of a publication: a nameplate, one lead story, a row of
+   secondary stories, a notice board and a short index. Not a landing page.
+   Hairlines and rules carry the layout instead of cards, pills and shadows, so
+   it reads as an institution rather than a starter template.
+   The .story / .card__* / .toggle blocks at the bottom are shared with /posts
+   and must stay in sync with that page. */
+
+/* ------------------------------- nameplate ------------------------------- */
+
+.masthead {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1.6rem;
+  overflow: hidden;
+  padding: 2.4rem 1.7rem 1.3rem;
+  border-radius: 2px;
+  color: #fff;
+}
+
+/* Split into two layers so the slow pan and the scrim never fight over the same
+   element. */
+.masthead__photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.masthead__photo-inner {
+  position: absolute;
+  inset: -6%;
+  background-image: url('/campus.png');
+  background-position: center 42%;
+  background-size: cover;
+  will-change: transform;
+}
+
+.masthead__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    100deg,
+    rgba(12, 10, 10, 0.92) 0%,
+    rgba(12, 10, 10, 0.78) 48%,
+    rgba(90, 12, 12, 0.66) 100%
+  );
+}
+
+.masthead__inner,
+.masthead__facts {
+  position: relative;
+  z-index: 2;
+}
+
+.masthead__kicker {
+  margin: 0 0 0.5rem;
+  color: #f0b429;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.masthead__nameplate {
+  margin: 0;
+  /* Set explicitly: _base.scss gives h1 its own dark colour, and an element's
+     own declaration beats inheritance from .masthead — which left this dark
+     text sitting on a dark photograph. */
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.6vw, 3.1rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+
+.masthead__tagline {
+  max-width: 58ch;
+  margin: 0.65rem 0 0;
+  color: rgba(255, 255, 255, 0.87);
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+}
+
+/* Facts as a ruled list rather than floating stat pills. */
+.masthead__facts {
+  display: flex;
+  gap: 1.4rem;
+  margin: 0;
+  padding-bottom: 0.2rem;
+}
+
+.masthead__facts div {
+  min-width: 62px;
+  padding-left: 0.9rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.masthead__facts dt {
+  color: rgba(255, 255, 255, 0.72);
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.masthead__facts dd {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 1.02rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .masthead__photo-inner {
+    animation: masthead-pan 52s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes masthead-pan {
+  from {
+    transform: scale(1.04) translate3d(-1.1%, 0, 0);
+  }
+  to {
+    transform: scale(1.13) translate3d(1.1%, -1.4%, 0);
+  }
+}
+
+/* ----------------------------- section strip ----------------------------- */
+
+/* The double rule a masthead sits on: heavy brand rule over a hairline. */
+.sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.35rem;
+  margin: 1.15rem 0 1.9rem;
+  padding: 0.7rem 0;
+  border-top: 3px solid var(--brand-deep);
+  border-bottom: 1px solid var(--ink);
+}
+
+.sections a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.sections a:hover {
+  color: var(--brand-deep);
+}
+
+.sections a span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+}
+
+/* ------------------------------- front page ------------------------------ */
+
+.front {
+  display: grid;
+  grid-template-columns: minmax(0, 2.15fr) minmax(0, 1fr);
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 1.9rem;
+}
+
+.front__lead {
+  min-width: 0;
+  padding-right: 1.7rem;
+  border-right: 1px solid var(--line-strong);
+}
+
+.front__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+  padding-left: 1.7rem;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--brand-deep);
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.kicker a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.kicker a:hover {
+  text-decoration: underline;
+}
+
+.lead__media {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 2px;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--hue, 220), 48%, 46%),
+    hsl(calc(var(--hue, 220) + 30), 54%, 30%)
+  );
+}
+
+.lead__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lead__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.95rem;
+}
+
+.lead__body h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.9vw, 2.15rem);
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.12;
+}
+
+.lead__body h2 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.lead__body h2 a:hover {
+  color: var(--brand-deep);
+}
+
+.lead__standfirst {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+}
+
+.byline__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #f6dbd4;
+  color: var(--brand-dark);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.byline__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.byline__sep {
+  color: var(--line-strong);
+}
+
+/* --------------------------------- panels -------------------------------- */
+
+.panel {
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--paper);
+}
+
+.panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 2px solid var(--brand-deep);
+}
+
+.panel__head h3 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.panel__head a {
+  color: var(--brand-deep);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.panel__head a:hover {
+  text-decoration: underline;
+}
+
+.panel__more {
+  display: block;
+  padding: 0.6rem 0.85rem;
+  border-top: 1px solid var(--line);
+  color: var(--brand-deep);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.panel__more:hover {
+  background: var(--brand-wash);
+}
+
+.panel__empty {
+  margin: 0;
+  padding: 0.9rem 0.85rem;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+}
+
+/* Ruled list — a date column and the headline, dotted apart. The same
+   convention the notice board uses. */
+.lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lines li {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px dotted var(--line-strong);
+}
+
+.lines li:last-child {
+  border-bottom: 0;
+}
+
+.lines time {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lines a {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.lines a:hover {
+  color: var(--brand-deep);
+  text-decoration: underline;
+}
+
+.lines span {
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.lines__flag {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lines__flag--urgent {
+  background: var(--brand-deep);
+  color: #fff;
+}
+
+.lines__where {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-style: normal;
+}
+
+.week__next {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px dotted var(--line-strong);
+  background: var(--brand-wash);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+}
+
+.week__next strong {
+  color: var(--brand-deep);
+  font-family: var(--font-mono);
+}
+
+/* ----------------------------- secondary row ----------------------------- */
+
+.secondaries {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem;
+  padding: 1.7rem 0;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.mini {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.mini__media {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 2px;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--hue, 220), 48%, 46%),
+    hsl(calc(var(--hue, 220) + 30), 54%, 30%)
+  );
+}
+
+.mini__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mini__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.mini__body h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.16rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.2;
+}
+
+.mini__body h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.mini__body h3 a:hover {
+  color: var(--brand-deep);
+}
+
+.mini__meta {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+}
+
+/* Extra columns on the home index table (the rest come from .board).
+   Rating and Comments cells are sized by .metrics-col in _posts.scss. */
+
+/* ------------------- shared with /posts — keep in sync ------------------- */
+
+.feed {
+  min-width: 0;
+}
+
+.feed-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+
+.story {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.story:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-2);
+}
+
+.story__media {
+  position: relative;
+  display: block;
+  /* Canonical cover ratio — see the note in _posts.scss. Shared by the home
+     feed and the posts grid so a banner is never cropped two different ways. */
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--hue, 220), 48%, 46%),
+    hsl(calc(var(--hue, 220) + 30), 54%, 30%)
+  );
+}
+
+.story__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.95rem 1.1rem 1.15rem;
+}
+
+.story__body h3 {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.28;
+}
+
+.story__body h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.story__body h3 a:hover {
+  color: var(--brand);
+}
+
+.story__body p {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+}
+
+.card__cat {
+  align-self: flex-start;
+  color: hsl(var(--hue, 0), 58%, 36%);
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.card__by {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+}
+
+.card__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #f6dbd4;
+  color: var(--brand-dark);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card__by-dot {
+  color: var(--line-strong);
+}
+
+.home__more {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 2.2rem;
+}
+
+/* Segmented control. */
+.toggle {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-full);
+  background: var(--paper);
+}
+
+.toggle button {
+  padding: 0.4rem 0.85rem;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle button.on {
+  background: var(--brand-deep);
+  color: #fff;
+}
+
+/* ------------------------------ responsive ------------------------------ */
+
+@media (max-width: 1040px) {
+  .front {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .front__lead {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .front__side {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.4rem;
+    margin-top: 1.7rem;
+    padding-top: 1.7rem;
+    padding-left: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+}
+
+@media (max-width: 1000px) {
+  .feed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .masthead {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.2rem;
+    padding: 1.9rem 1.3rem 1.1rem;
+  }
+
+  .masthead__facts {
+    flex-wrap: wrap;
+    gap: 0.9rem 1.2rem;
+  }
+
+  .masthead__facts div:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .secondaries {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mini {
+    grid-template-columns: 132px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .front__side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .feed-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .masthead__facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .masthead__facts div {
+    min-width: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+}

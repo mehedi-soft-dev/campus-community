@@ -1,0 +1,121 @@
+# Container stack for the University of South Asia community portal.
+#
+# Ports are deliberately NOT the defaults: each service runs on its usual port
+# with the third digit raised by one, and the container port is the published
+# port (no translation anywhere).
+#
+#   MySQL   3306 -> 3316
+#   API     8800 -> 8810
+#   Web     5173 -> 5183
+#
+# Bring it up with:  docker compose up --build
+# Then open:         http://localhost:5183
+
+name: blog-site
+
+# Shared by the api and seed services: they run the same image.
+x-api-build: &api-build
+  context: .
+  dockerfile: src/backend/Dockerfile
+
+x-api-env: &api-env
+  NODE_ENV: production
+  PORT: "8810"
+  # The browser-facing origin, i.e. where nginx serves the app.
+  CLIENT_ORIGIN: http://localhost:5183
+  # Production mode defaults to Secure cookies, which a browser refuses to store
+  # over plain http://localhost. The stack is HTTPS-terminated nowhere, so it
+  # must opt out explicitly. Behind a real TLS terminator, drop this.
+  COOKIE_SECURE: "false"
+
+  DB_HOST: db
+  DB_PORT: "3316"
+  DB_USER: root
+  DB_PASSWORD: ${DB_PASSWORD:-root}
+  DB_NAME: ${DB_NAME:-campus-community}
+  DB_AUTO_MIGRATE: "true"
+
+  JWT_SECRET: ${JWT_SECRET:-dev-only-secret-replace-before-deploying-2f8c1a9d}
+  JWT_EXPIRES_IN: 7d
+  COOKIE_NAME: access_token
+
+  UPLOAD_MAX_MB: "5"
+  DOCUMENT_MAX_MB: "15"
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    command:
+      - --port=3316
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-campus-community}
+      # Makes the bundled client tools talk to 3316 as well.
+      MYSQL_TCP_PORT: "3316"
+    ports:
+      - "3316:3316"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h 127.0.0.1 -P 3316 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  # One-shot: creates the schema and seeds demo content, then exits. Safe to run
+  # on every `up` — it skips seeding when users already exist.
+  seed:
+    build: *api-build
+    image: blog-site-api:local
+    environment: *api-env
+    command: ["node", "scripts/init-db.js"]
+    volumes:
+      - uploads-data:/app/src/backend/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: *api-build
+    image: blog-site-api:local
+    restart: unless-stopped
+    init: true
+    environment: *api-env
+    ports:
+      - "8810:8810"
+    volumes:
+      # Uploaded covers and PDFs must survive a container rebuild.
+      - uploads-data:/app/src/backend/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8810/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: src/frontend/Dockerfile
+    image: blog-site-web:local
+    restart: unless-stopped
+    ports:
+      - "5183:5183"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  uploads-data:

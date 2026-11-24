@@ -1,0 +1,26 @@
+# Keep the build context small and hermetic.
+
+# Installed inside the image instead.
+node_modules
+**/node_modules
+
+dist
+**/dist
+
+# Runtime uploads are provided by a named volume in compose.
+src/backend/uploads
+
+.git
+.gitignore
+.dockerignore
+*.log
+npm-debug.log*
+
+# Never bake secrets into an image.
+.env
+.env.local
+.env.*.local
+
+README.md
+.vscode
+.idea

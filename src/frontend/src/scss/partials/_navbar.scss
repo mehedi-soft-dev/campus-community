@@ -1,0 +1,327 @@
+/* Dark-red utility strip above the main bar — the small institutional detail
+   that makes the header read as a university portal. */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.navbar__utility {
+  background: var(--brand-deep);
+  color: #f7d8d2;
+}
+
+.navbar__utility .inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.38rem 1.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.71rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.navbar__utility b {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.7rem 1.5rem;
+}
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  flex: none;
+}
+
+/* The logo is a transparent PNG on a light background, so it sits directly on
+   the header with no plate. "Community Portal" already lives in the utility
+   strip, so the mark is not repeated as text here. */
+.navbar__logo {
+  display: block;
+  height: 44px;
+  width: auto;
+}
+
+/* Section links. They scroll horizontally on narrow screens rather than
+   disappearing, so navigation stays reachable without a drawer. */
+.navbar__links {
+  display: flex;
+  align-items: center;
+  gap: 1.05rem;
+  flex: none;
+}
+
+.navbar__links .navbar__link {
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.navbar__links .navbar__link.is-active {
+  color: var(--brand);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .navbar__links {
+    order: 4;
+    flex-basis: 100%;
+    gap: 0.9rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    scrollbar-width: none;
+  }
+
+  .navbar__links::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.navbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-left: auto;
+}
+
+/* Q&A entry point — sits immediately right of the search field. */
+.navbar__qa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.navbar__qa:hover {
+  border-color: var(--brand);
+  color: var(--brand-deep);
+}
+
+.navbar__qa.is-active {
+  border-color: var(--brand-deep);
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+}
+
+.navbar__qa-icon {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* Unanswered count. Solid brand fill so the number reads at a glance. */
+.navbar__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: var(--r-full);
+  background: var(--brand-deep);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.navbar__link {
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.navbar__link:hover {
+  color: var(--brand);
+}
+
+.navbar__user {
+  position: relative;
+}
+
+.navbar__avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.navbar__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.navbar__avatar--skeleton {
+  background: var(--line);
+  cursor: default;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.navbar__menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 180px;
+  padding: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--paper);
+  box-shadow: var(--shadow-2);
+}
+
+.navbar__menu-name {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+}
+
+.navbar__menu button {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.7rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--danger-ink);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navbar__menu button:hover {
+  background: var(--danger-soft);
+}
+
+.navbar__error {
+  margin: 0;
+  padding: 0.5rem 1.5rem;
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  /* The utility strip keeps only the university name: the logo below already
+     carries it, and a second line just crowded the bar. */
+  .navbar__utility .inner {
+    justify-content: flex-start;
+    padding: 0.3rem 1rem;
+    font-size: 0.64rem;
+  }
+
+  .navbar__utility .inner span:last-child {
+    display: none;
+  }
+
+  .navbar__inner {
+    flex-wrap: wrap;
+    gap: 0.45rem 0.75rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .navbar__logo {
+    height: 30px;
+  }
+
+  /* Icon-only Ask, so the logo and the actions share one row instead of
+     pushing "Create account" onto a line of its own. */
+  .navbar__qa-label {
+    display: none;
+  }
+
+  .navbar__qa {
+    padding: 0.5rem;
+  }
+
+  .navbar__actions {
+    gap: 0.5rem;
+  }
+
+  /* Touch targets: these were 22–32px tall, below the 40px guideline. */
+  .navbar__actions .btn,
+  .navbar__actions .navbar__link,
+  .navbar__actions .navbar__qa {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  /* Search gets its own full-width row. */
+  .search {
+    order: 3;
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  /* Nav on its own row: scrolls sideways with properly sized targets. */
+  .navbar__links {
+    order: 4;
+    flex-basis: 100%;
+    gap: 1.15rem;
+    overflow-x: auto;
+    padding: 0.2rem 0 0.15rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .navbar__links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navbar__links .navbar__link {
+    padding: 0.55rem 0;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+}

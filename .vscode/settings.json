@@ -1,0 +1,22 @@
+{
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/package-lock.json": true
+  },
+
+  // The SCSS relies on CSS custom properties; the built-in validator reports
+  // false positives on them.
+  "scss.validate": false,
+  "css.validate": false,
+
+  "js/ts.implicitProjectConfig.checkJs": true
+}

@@ -1,0 +1,337 @@
+/* Staff area. Same institutional language as the public boards: brand rules,
+   square corners, dotted row separators, mono numerals. */
+
+.admin__head {
+  margin-bottom: 0.4rem;
+}
+
+.admin__head h1 {
+  margin: 0.2rem 0 0.4rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+  letter-spacing: -0.02em;
+}
+
+.admin__who {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+}
+
+.admin__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.2rem;
+  margin: 1.15rem 0 1.7rem;
+  padding: 0.65rem 0;
+  border-top: 3px solid var(--brand-deep);
+  border-bottom: 1px solid var(--ink);
+}
+
+.admin__tab {
+  padding: 0.2rem 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.admin__tab:hover {
+  color: var(--brand-deep);
+}
+
+.admin__tab.is-active {
+  border-bottom-color: var(--brand-deep);
+  color: var(--brand-deep);
+}
+
+.admin__grid {
+  display: grid;
+  gap: 1.6rem;
+}
+
+/* ------------------------------- dashboard ------------------------------- */
+
+.admin__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--paper);
+}
+
+.admin__stat {
+  padding: 0.85rem 1rem;
+  border-right: 1px solid var(--line);
+}
+
+.admin__stat:last-child {
+  border-right: 0;
+}
+
+.admin__stat dt {
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin__stat dd {
+  margin: 0.2rem 0 0;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin__stat--flag dd {
+  color: var(--brand-deep);
+}
+
+/* --------------------------------- tables -------------------------------- */
+
+.admin-tablewrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+}
+
+.admin-table th {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 2px solid var(--brand-deep);
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px dotted var(--line-strong);
+  color: var(--ink-2);
+  vertical-align: top;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.admin-table__num {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-table__title {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.admin-table__sub {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.admin-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand-deep);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.admin-action--danger {
+  color: var(--danger-ink);
+}
+
+.admin-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* --------------------------------- forms --------------------------------- */
+
+.admin-form {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 0.9rem 1.15rem;
+}
+
+.admin-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.9rem;
+}
+
+.admin-field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.admin-field__label {
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+}
+
+.admin-field input:focus,
+.admin-field select:focus,
+.admin-field textarea:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-wash);
+}
+
+.admin-field textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.admin-field__hint {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-style: normal;
+}
+
+.admin-field__error {
+  color: var(--danger-ink);
+  font-size: 0.72rem;
+  font-style: normal;
+}
+
+.admin-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+}
+
+.admin-note {
+  margin: 0;
+  padding: 0.7rem 0.9rem 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+}
+
+.admin-empty {
+  padding: 1rem 0.9rem;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+}
+
+.admin-pill {
+  display: inline-block;
+  padding: 0.08rem 0.4rem;
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-pill--ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.admin-pill--warn {
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+}
+
+.admin-pill--muted {
+  background: var(--bg);
+  color: var(--muted);
+}
+
+/* Colour dot matching a category's accent hue, as shown on the public pages. */
+.admin-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  vertical-align: baseline;
+}
+
+.admin__filters {
+  padding: 0.9rem 0.9rem 0.2rem;
+  margin-bottom: 0.4rem;
+}
+
+.admin-role-select {
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink-2);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+}
+
+.banner--ok {
+  border: 1px solid #a6e0bb;
+  background: var(--ok-soft);
+  color: var(--ok);
+}

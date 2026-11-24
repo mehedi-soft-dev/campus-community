@@ -1,0 +1,76 @@
+{
+  // Debug configurations for the blog-site app.
+  // Press F5 and pick "Full stack" to start the API and the web app together,
+  // with breakpoints in both.
+  //
+  // Stop `npm run dev` before using these, or ports 5173/8800 are already taken.
+  //
+  // Port 8800 is shared with another local project (E:\my_workspace\blog-app).
+  // If that project's API is running, this one crashes with EADDRINUSE — stop
+  // it before pressing F5 here.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Breakpoints work in everything under src/backend.
+      // Restart with Ctrl+Shift+F5.
+      // Starts the MySQL container first — the API exits on boot without it.
+      "name": "API",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/backend/server.js",
+      "cwd": "${workspaceFolder}/src/backend",
+      "console": "integratedTerminal",
+      "preLaunchTask": "db: start",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Same as `npm run dev:api`: nodemon restarts on save and the debugger
+      // reattaches to the new child process.
+      "name": "API (auto-restart)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/src/backend",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "preLaunchTask": "db: start",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Starts Vite (the "vite: dev" task) and opens the app with source maps,
+      // so breakpoints in .jsx files land on the right line.
+      "name": "Web",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/src/frontend",
+      "preLaunchTask": "vite: dev",
+      "smartStep": true
+    },
+    {
+      // Use this instead of "Web" if you debug in Edge.
+      "name": "Web (Edge)",
+      "type": "pwa-msedge",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/src/frontend",
+      "preLaunchTask": "vite: dev",
+      "smartStep": true
+    }
+  ],
+  "compounds": [
+    {
+      // F5 -> "Full stack": API + Chrome, both debuggable.
+      "name": "Full stack",
+      "configurations": ["API", "Web"],
+      "stopAll": true
+    },
+    {
+      // Same, but the API restarts itself when you save a backend file.
+      "name": "Full stack (auto-restart)",
+      "configurations": ["API (auto-restart)", "Web"],
+      "stopAll": true
+    }
+  ]
+}

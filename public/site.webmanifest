@@ -1,0 +1,24 @@
+{
+  "name": "University of South Asia — Community Portal",
+  "short_name": "USA Portal",
+  "description": "Notices, exam routines, class notes and campus writing from the University of South Asia, published by students and staff.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf8f6",
+  "theme_color": "#a80000",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

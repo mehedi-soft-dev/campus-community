@@ -1,0 +1,214 @@
+.auth {
+  display: grid;
+  grid-template-columns: 1.02fr 0.98fr;
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+/* Deep institutional red panel, matched to the logo's dark red. */
+.auth__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 3rem;
+  color: #f7ded9;
+  background:
+    radial-gradient(120% 85% at 12% 8%, #b31200 0%, #8e0000 46%, #590000 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Faint radiating lines echoing the fan in the emblem. */
+.auth__aside::after {
+  content: '';
+  position: absolute;
+  right: -120px;
+  bottom: -160px;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0.05) 0deg 3deg,
+    transparent 3deg 12deg
+  );
+  pointer-events: none;
+}
+
+.auth__brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 15px;
+  border-radius: 10px;
+  background: #fff;
+  width: fit-content;
+  position: relative;
+  z-index: 1;
+}
+
+.auth__brand img {
+  display: block;
+  height: 46px;
+  width: auto;
+}
+
+.auth__pitch {
+  position: relative;
+  z-index: 1;
+  max-width: 44ch;
+  margin-top: auto;
+}
+
+.auth__pitch h1 {
+  margin: 0 0 1rem;
+  color: #fff;
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+}
+
+.auth__pitch p {
+  margin: 0;
+  color: #f2cfc9;
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+}
+
+.auth__points {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-sans);
+  font-size: 0.87rem;
+}
+
+.auth__points li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.auth__points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  /* Brightened from the logo's #e8890c, which goes muddy against deep red. */
+  background: #ffc14d;
+}
+
+.auth__back {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  color: #f2cfc9;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.auth__back:hover {
+  color: #fff;
+}
+
+.auth__panel {
+  display: grid;
+  place-items: center;
+  padding: 2.5rem 1.5rem;
+}
+
+/* Mobile-only escape hatch; on wider screens the red aside shows the same link. */
+.auth__back-mobile {
+  display: none;
+  color: var(--brand-deep);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.auth__back-mobile:hover {
+  text-decoration: underline;
+}
+
+.auth__card {
+  width: 100%;
+  max-width: 396px;
+}
+
+.auth__card header {
+  margin-bottom: 1.6rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.auth__card header h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.75rem;
+}
+
+.auth__card header p {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.89rem;
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth__switch {
+  margin: 1.3rem 0 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.auth__switch a {
+  color: var(--brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth__hint {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.79rem;
+  text-align: center;
+}
+
+.auth__hint code {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.77rem;
+  color: var(--ink-2);
+}
+
+@media (max-width: 900px) {
+  .auth {
+    grid-template-columns: 1fr;
+  }
+
+  .auth__aside {
+    display: none;
+  }
+
+  .auth__panel {
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+  }
+
+  .auth__back-mobile {
+    display: inline-block;
+    margin-bottom: 1.1rem;
+  }
+}

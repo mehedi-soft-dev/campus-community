@@ -1,0 +1,194 @@
+.footer {
+  margin-top: auto;
+  background: var(--ink);
+  color: #b8b1ac;
+  border-top: 4px solid var(--brand-deep);
+}
+
+.footer__inner {
+  display: grid;
+  /* brand · browse · account · categories */
+  grid-template-columns: 1.6fr 0.9fr 1fr 1fr;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2rem;
+}
+
+/* The logo has black text, so on the dark footer it needs a light plate. */
+.footer__logo-plate {
+  display: inline-flex;
+  padding: 9px 13px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.footer__logo-plate img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.footer__brand p {
+  max-width: 42ch;
+  margin: 0.9rem 0 0;
+  color: #b8b1ac;
+  font-family: var(--font-sans);
+  font-size: 0.87rem;
+}
+
+.footer__nav h3 {
+  margin: 0 0 0.9rem;
+  color: #f3eeeb;
+  font-family: var(--font-sans);
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.footer__nav ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer__nav a {
+  color: #b8b1ac;
+  font-family: var(--font-sans);
+  font-size: 0.87rem;
+  text-decoration: none;
+}
+
+.footer__nav a:hover {
+  color: #fff;
+}
+
+/* Session-aware account column: the logged-in state shows who you are and a
+   logout button styled to match the surrounding links. */
+.footer__who {
+  color: #8f8781;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+}
+
+.footer__logout {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #b8b1ac;
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.87rem;
+  cursor: pointer;
+}
+
+.footer__logout:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.footer__error {
+  margin: 0.5rem 0 0;
+  color: #fecdca;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+}
+
+.footer__bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.2rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8f8781;
+  font-family: var(--font-sans);
+  font-size: 0.77rem;
+}
+
+.footer__disclaimer {
+  color: #8f8781;
+}
+
+@media (max-width: 900px) {
+  .footer__inner {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footer__brand {
+    grid-column: 1 / -1;
+  }
+
+  .footer__bottom {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Two compact columns beat one tall stack — as a single column the footer
+     ran to ~930px, more than a phone screen, before the bottom bar. */
+  .footer__inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.1rem 1rem;
+    padding: 1.4rem 1rem 1rem;
+  }
+
+  .footer__brand {
+    grid-column: 1 / -1;
+  }
+
+  /* The blurb is decoration on a phone: two lines is enough. */
+  .footer__brand p {
+    display: -webkit-box;
+    margin-top: 0.6rem;
+    overflow: hidden;
+    font-size: 0.82rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  /* Categories is the longest list, so it takes the full width in two columns
+     instead of running as a single tall stack. */
+  .footer__nav:last-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .footer__nav:last-of-type ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem 1rem;
+  }
+
+  .footer__logo-plate {
+    padding: 6px 9px;
+  }
+
+  .footer__logo-plate img {
+    height: 30px;
+  }
+
+  .footer__nav h3 {
+    margin-bottom: 0.55rem;
+  }
+
+  .footer__nav ul {
+    gap: 0.35rem;
+  }
+
+  .footer__nav a,
+  .footer__logout {
+    font-size: 0.83rem;
+  }
+
+  .footer__bottom {
+    padding: 0.9rem 1rem 1.1rem;
+    font-size: 0.74rem;
+  }
+}

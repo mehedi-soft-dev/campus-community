@@ -1,0 +1,428 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Palette sampled from public/uni_logo.png — the emblem's deep red, the
+   wordmark's brighter red, and the orange ray in the fan. */
+:root {
+  --brand: #cf1a00;
+  --brand-deep: #a80000;
+  --brand-dark: #8e0000;
+  --brand-bright: #ff3b00;
+  --brand-wash: #fdf2ef;
+  --amber: #e8890c;
+  --amber-soft: #fdf6e9;
+
+  --ink: #141414;
+  --ink-2: #3f3a38;
+  --muted: #7d7570;
+  --line: #eae5e2;
+  /* Inputs and tiles use this; kept dark enough to read as a control boundary. */
+  --line-strong: #c9bdb6;
+  --paper: #ffffff;
+  --bg: #faf8f6;
+
+  --danger: #b42318;
+  --danger-ink: #7a271a;
+  --danger-soft: #fef3f2;
+  --ok: #067647;
+  --ok-soft: #ecfdf3;
+
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 18px;
+  --r-full: 999px;
+
+  --shadow-1: 0 1px 2px rgba(20, 20, 20, 0.06);
+  --shadow-2: 0 10px 30px -12px rgba(20, 20, 20, 0.24);
+
+  /* Noto Sans Bengali sits directly after the primary face in each stack, so
+     Latin renders from the intended family and Bangla falls through to it.
+     Putting it after a generic (sans-serif) would never be reached. */
+  --font-display: 'Bricolage Grotesque Variable', 'Noto Sans Bengali Variable', system-ui,
+    sans-serif;
+  --font-sans: 'Instrument Sans Variable', 'Noto Sans Bengali Variable', system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Instrument Serif ships regular + italic only; synthesised bold looks
+     smeared, so forbid it outright. */
+  font-synthesis-weight: none;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Community surfaces use the Bricolage grotesque; official pages override this
+   with Instrument Serif. Bricolage has an optical-size axis, so `auto` picks the
+   large-text cut for headlines rather than the small-text shapes. */
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-optical-sizing: auto;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+
+h4 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.25;
+}
+
+a {
+  color: var(--brand);
+}
+
+img {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app__main {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  flex: 1;
+}
+
+/* Phones: 24px of side padding was eating the content width on a 375px screen. */
+@media (max-width: 600px) {
+  .app__main {
+    padding: 1.4rem 1rem 2.6rem;
+  }
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--brand);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Bangla needs more vertical room than Latin at the same size. */
+[lang='bn'] {
+  font-size: 1.02em;
+  line-height: 1.85;
+}
+
+/* Short red rule used above section headings. */
+.rule {
+  width: 46px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--brand);
+  margin-bottom: 0.9rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  margin: 0 0 1.1rem;
+}
+
+.section-head h2 {
+  font-size: 1.5rem;
+}
+
+.section-head .spacer {
+  margin-left: auto;
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1.15rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-full);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--brand-deep);
+  color: #fff;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--brand-dark);
+}
+
+.btn--ghost {
+  background: var(--paper);
+  border-color: var(--line-strong);
+  color: var(--ink-2);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.btn--danger {
+  background: var(--danger-soft);
+  border-color: #fecdca;
+  color: var(--danger-ink);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #fee4e2;
+}
+
+.btn--sm {
+  padding: 0.44rem 0.85rem;
+  font-size: 0.82rem;
+}
+
+.btn--block {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn__icon {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- chips / pills ---------- */
+
+.chip {
+  --hue: 220;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.44rem 0.95rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-full);
+  background: var(--paper);
+  color: var(--ink-2);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.chip::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: hsl(var(--hue), 72%, 52%);
+}
+
+.chip:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.chip--active {
+  background: var(--brand-deep);
+  border-color: var(--brand-deep);
+  color: #fff;
+}
+
+.chip--active:hover {
+  color: #fff;
+}
+
+/* ---------- form fields ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.field--grow {
+  flex: 1;
+}
+
+.field__label {
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-wash);
+}
+
+.field__error {
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.field__hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* ---------- banners ---------- */
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--r);
+  font-size: 0.88rem;
+}
+
+.banner--error {
+  background: var(--danger-soft);
+  border: 1px solid #fecdca;
+  color: var(--danger-ink);
+}
+
+/* ---------- loading + empty states ---------- */
+
+.skeleton-line {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f1ece9, #e6dfda, #f1ece9);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-line--short {
+  width: 38%;
+}
+
+.skeleton-line--medium {
+  width: 72%;
+}
+
+.skeleton-line--title {
+  width: 85%;
+  height: 26px;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.page-status {
+  padding: 5rem 1rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-state {
+  padding: 3.5rem 1.5rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  text-align: center;
+}
+
+.empty-state__code {
+  margin: 0;
+  color: var(--line-strong);
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.empty-state h1,
+.empty-state h2 {
+  margin: 0.5rem 0 0.6rem;
+  font-size: 1.35rem;
+}
+
+.empty-state p {
+  margin: 0 auto 1.5rem;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 0.92rem;
+}

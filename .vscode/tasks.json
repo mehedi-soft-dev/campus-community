@@ -1,0 +1,88 @@
+{
+  // Tasks used by launch.json, plus a few you can run directly with
+  // Ctrl+Shift+B or Terminal -> Run Task.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // The API exits immediately if MySQL is unreachable, so this runs first.
+      // If the container does not exist yet on this machine, create it once:
+      //   docker compose -f E:\my_workspace\dbms\docker-compose.yml up -d
+      "label": "db: start",
+      "type": "shell",
+      "command": "docker start dbms-mysql",
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent", "panel": "dedicated" }
+    },
+    {
+      // Drop, re-migrate and re-seed. Destroys local data.
+      "label": "db: init",
+      "type": "npm",
+      "script": "db:init",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "db: migrate",
+      "type": "npm",
+      "script": "db:migrate",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      // Background task: VS Code waits for Vite to print "ready in" before it
+      // opens the browser, so the debug session never hits a dead port.
+      "label": "vite: dev",
+      "type": "npm",
+      "script": "dev:web",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": { "regexp": "." },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*VITE.*",
+          "endsPattern": ".*ready in.*"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      // Background task: nodemon for the API. Ready once the listen line prints.
+      "label": "api: dev",
+      "type": "npm",
+      "script": "dev:api",
+      "isBackground": true,
+      "dependsOn": ["db: start"],
+      "problemMatcher": {
+        "owner": "api",
+        "pattern": { "regexp": "." },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*nodemon.*",
+          "endsPattern": ".*localhost:8800.*"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      // Everything in one terminal, the same command the README documents.
+      // Default build task, so Ctrl+Shift+B runs it.
+      "label": "dev: both",
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "dependsOn": ["db: start"],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": {
+        "owner": "dev-both",
+        "pattern": { "regexp": "." },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*\\[api\\].*",
+          "endsPattern": ".*(ready in|localhost:8800).*"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    }
+  ]
+}

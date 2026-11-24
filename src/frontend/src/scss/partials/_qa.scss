@@ -1,0 +1,291 @@
+/* Community Q&A. Shares the institutional language of the boards: square
+   corners, a brand rule under each heading, dotted separators. */
+
+.qa__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--brand-deep);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  text-decoration: none;
+}
+
+.qa__back:hover {
+  text-decoration: underline;
+}
+
+.qa__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: -0.5rem 0 1.5rem;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+}
+
+.qa__stats strong {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.qa__stats-open strong {
+  color: var(--brand-deep);
+}
+
+.qa__stats-cta {
+  margin-left: auto;
+}
+
+/* ------------------------------- ask panel ------------------------------- */
+
+.qa__ask {
+  margin-bottom: 1.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--paper);
+}
+
+.qa__ask-toggle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 0;
+  background: none;
+  color: var(--brand-deep);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.qa__ask.is-open .qa__ask-toggle {
+  border-bottom: 2px solid var(--brand-deep);
+}
+
+.qa__ask-hint {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.qa__ask-caret {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.qa__ask-form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem 0.9rem 1.2rem;
+}
+
+.qa__ask-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.qa__ask-row .field {
+  flex: 1;
+  min-width: 220px;
+}
+
+.qa__signin {
+  margin: 0 0 1.4rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 2px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+}
+
+/* --------------------------- listing table bits -------------------------- */
+
+.qa__answers-col {
+  width: 92px;
+  text-align: right;
+}
+
+.qa__count {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.qa__row--open .qa__count {
+  color: var(--brand-deep);
+  font-weight: 700;
+}
+
+.qa__marker--solved {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+/* ---------------------------- question detail ---------------------------- */
+
+.qa__question {
+  padding: 1.4rem 1.5rem 1.2rem;
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--brand-deep);
+  border-radius: 2px;
+  background: var(--paper);
+}
+
+.qa__question-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.qa__question h1 {
+  margin: 0.25rem 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.14;
+}
+
+.qa__meta {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+}
+
+.qa__question-side {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.qa__solved,
+.qa__open {
+  padding: 0.22rem 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.qa__solved {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.qa__open {
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+}
+
+.qa__body {
+  margin: 1rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.97rem;
+  line-height: 1.7;
+  /* The question body is plain text, so keep the author's line breaks. */
+  white-space: pre-wrap;
+}
+
+/* -------------------------------- answers -------------------------------- */
+
+.qa__answers {
+  margin-top: 2rem;
+}
+
+.qa__answers h2 {
+  margin: 0 0 0.3rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 2px solid var(--brand-deep);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.qa__prompt {
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+}
+
+.answer {
+  padding: 1rem 0;
+  border-bottom: 1px dotted var(--line-strong);
+}
+
+/* The answer the asker marked as the solution, pulled out of the list. */
+.answer--accepted {
+  margin-top: 0.9rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #a6e0bb;
+  border-left: 4px solid var(--ok);
+  border-radius: 2px;
+  background: #f6fdf8;
+}
+
+.answer__accepted {
+  margin: 0 0 0.6rem;
+  color: var(--ok);
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.answer__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+}
+
+.answer__head strong {
+  color: var(--ink);
+}
+
+.answer__body {
+  margin: 0.6rem 0 0;
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.qa__answer-form {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+}
+
+.qa__answer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.8rem;
+}

@@ -1,0 +1,97 @@
+/* Post listing grid.
+   Every post carries ONE author-chosen banner image, so every card gets the
+   same column width and the same 16:9 cover box.
+
+   A mixed-span "magazine" grid was tried here and removed: because the spans
+   also changed the cover's aspect ratio (4-col = free height, 2-col = 3:4
+   portrait, 3-col = 16:10), the same banner was cropped a different way
+   depending on where it happened to land. A 3:4 crop of a 16:9 photo discards
+   roughly 60% of the frame, so position in the list changed what the image
+   looked like. One ratio and one card shape keeps the author in control of
+   what a reader sees. */
+
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+/* The canonical cover shape. Matches the post page (.single__cover), the home
+   page feature (.bento__media) and the write preview (.write__preview), so what
+   the author previews is what readers get. */
+.posts-grid .story__media {
+  aspect-ratio: 16 / 9;
+}
+
+/* Generated SVG covers fill their media box exactly. */
+.cover-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ------------- engagement metrics — shared by home, /posts, /post/:id ------- */
+
+.metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.9rem;
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+}
+
+.metrics__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.metrics__item strong {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics__sub {
+  font-size: 0.72rem;
+}
+
+.metrics__rating strong {
+  color: var(--ink);
+}
+
+.metrics__star {
+  color: var(--amber);
+  font-size: 0.8rem;
+}
+
+.metrics__empty {
+  color: var(--line-strong);
+}
+
+/* Fixed-width cells so the numbers line up down the front-page table. */
+.metrics-col {
+  width: 96px;
+  white-space: nowrap;
+}
+
+.metrics__none {
+  color: var(--line-strong);
+}
+
+@media (max-width: 1024px) {
+  .posts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .posts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

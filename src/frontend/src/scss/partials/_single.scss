@@ -1,0 +1,213 @@
+.single {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.single__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem 2.25rem 2.75rem;
+  border: 1px solid var(--line-strong);
+  /* Square, to match the sidebar it sits next to — see _menu.scss. */
+  border-radius: 2px;
+  background: var(--paper);
+}
+
+.single__content > .chip {
+  align-self: flex-start;
+}
+
+.single__title {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+}
+
+.single__byline {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.single__avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--brand-wash);
+  color: var(--brand-dark);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.single__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.single__author {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+
+.single__author strong {
+  color: var(--ink);
+}
+
+.single__author span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.single__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.single__cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  border-radius: var(--r);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--hue, 220), 68%, 62%),
+    hsl(calc(var(--hue, 220) + 34), 72%, 46%)
+  );
+}
+
+.single__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.single__cover-fallback {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Rich text body — the class names below target the sanitized HTML from the API. */
+.single__body {
+  color: #243044;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.single__body p {
+  margin: 0 0 1.1rem;
+}
+
+.single__body h1,
+.single__body h2,
+.single__body h3,
+.single__body h4 {
+  margin: 1.8rem 0 0.7rem;
+  font-family: var(--font-sans);
+}
+
+.single__body h2 {
+  font-size: 1.3rem;
+}
+
+.single__body h3 {
+  font-size: 1.12rem;
+}
+
+.single__body ul,
+.single__body ol {
+  margin: 0 0 1.1rem;
+  padding-left: 1.35rem;
+}
+
+.single__body li {
+  margin-bottom: 0.4rem;
+}
+
+.single__body blockquote {
+  margin: 1.5rem 0;
+  padding: 0.3rem 0 0.3rem 1.2rem;
+  border-left: 3px solid var(--brand-deep);
+  color: var(--ink-2);
+  font-style: italic;
+}
+
+.single__body a {
+  color: var(--brand);
+}
+
+.single__body img {
+  border-radius: var(--r-sm);
+}
+
+.single__body pre {
+  overflow: auto;
+  padding: 1rem;
+  border-radius: var(--r-sm);
+  background: #0b1220;
+  color: #e7ecf3;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.single__body code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.single__body :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.single__body > :first-child {
+  margin-top: 0;
+}
+
+.single__body > :last-child {
+  margin-bottom: 0;
+}
+
+.post-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (max-width: 980px) {
+  .single {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .single__content {
+    padding: 1.5rem 1.25rem 2rem;
+  }
+
+  .single__byline {
+    flex-wrap: wrap;
+  }
+
+  .single__actions {
+    width: 100%;
+    margin-left: 0;
+  }
+}

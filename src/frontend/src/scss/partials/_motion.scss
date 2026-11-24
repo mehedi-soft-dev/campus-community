@@ -1,0 +1,90 @@
+/* Motion layer.
+   Everything animative lives inside prefers-reduced-motion: no-preference, so a
+   visitor who asks their OS for less movement gets a completely static page
+   rather than a partially-animated one. */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Scroll reveal. The .reveal class is added by useReveal at runtime, so if
+     JavaScript fails the content is simply visible — no permanent opacity: 0. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.55s ease,
+      transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1.15);
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Route transition */
+  .page-enter {
+    animation: page-fade 0.32s ease both;
+  }
+
+  @keyframes page-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Cover images: the card lift comes from _home.scss, this adds a slow zoom
+     inside the fixed 16:9 frame. */
+  .lead__media img,
+  .mini__media img,
+  .story__media img {
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .lead:hover .lead__media img,
+  .mini:hover .mini__media img,
+  .story:hover .story__media img {
+    transform: scale(1.06);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* Nav underline slides in from the left. */
+  .navbar__links .navbar__link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -5px;
+    height: 2px;
+    background: var(--brand);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.22s ease;
+  }
+
+  .navbar__links .navbar__link:hover::after,
+  .navbar__links .navbar__link.is-active::after {
+    transform: scaleX(1);
+  }
+}
+
+/* Positioned in both motion modes, since the underline is anchored to it. */
+.navbar__links .navbar__link {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .page-enter {
+    animation: none;
+  }
+}

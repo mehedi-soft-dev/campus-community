@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SAU Community — design preview</title>
+<style>
+  /* Tokens matched to the running app (src/frontend/src/scss/partials/_base.scss),
+     which now uses the University of South Asia palette sampled from the crest:
+     deep red, black, warm off-white. */
+  :root{
+    --ink:#141414; --ink-2:#3f3a38; --muted:#7d7570;
+    --line:#eae5e2; --line-strong:#c9bdb6;
+    --paper:#fff; --bg:#faf8f6;
+    --accent:#a80000; --accent-soft:#fdf2ef; --accent-bright:#ff3b00;
+    --amber:#ffc14d;
+    --danger:#b42318; --danger-ink:#7a271a; --danger-soft:#fef3f2;
+    --ok:#067647; --ok-soft:#ecfdf3; --warn:#b54708; --warn-soft:#fffaeb;
+    --r-sm:8px; --r:12px; --r-lg:18px; --r-full:999px;
+    --shadow-1:0 1px 2px rgba(20,20,20,.06);
+    --shadow-2:0 10px 30px -12px rgba(20,20,20,.24);
+    --font-display:'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;
+    --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --font-serif:Georgia,'Times New Roman',Times,serif;
+    --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink-2);font-family:var(--font-sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{color:var(--ink);font-family:var(--font-display);font-weight:700;line-height:1.2;letter-spacing:-.015em;margin:0}
+  a{color:var(--accent)}
+  img{max-width:100%}
+
+  /* ---- prototype chrome (not part of the app) ---- */
+  .proto{background:#0b1220;color:#c7cdf5;padding:10px 16px;font-size:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .proto b{color:#fff}
+  .proto .tag{background:#312e81;color:#c7cdf5;padding:2px 8px;border-radius:999px;font-size:11px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;background:#fff;border-bottom:1px solid var(--line);padding:8px 16px;position:sticky;top:0;z-index:50}
+  .tabs button{font:inherit;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--line-strong);background:#fff;color:var(--ink-2);cursor:pointer}
+  .tabs button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .screen{display:none}
+  .screen.on{display:block}
+
+  /* ---- app shell ---- */
+  .container{max-width:1120px;margin:0 auto;padding:24px}
+  .navbar{background:rgba(255,255,255,.9);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}
+  .navbar .inner{max-width:1120px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:20px}
+  .logo{font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--ink);text-decoration:none;white-space:nowrap}
+  .logo span{color:var(--accent)}
+  .search{flex:1;max-width:360px;position:relative}
+  .search input{width:100%;padding:8px 14px 8px 32px;border:1px solid var(--line-strong);border-radius:999px;background:var(--bg);font:inherit;font-size:13px;color:var(--ink)}
+  .search::before{content:'';position:absolute;left:12px;top:50%;width:13px;height:13px;margin-top:-7px;border:1.8px solid var(--muted);border-radius:50%}
+  .nav-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .nav-link{font-size:13px;font-weight:600;color:var(--ink-2);text-decoration:none}
+  .avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--accent-soft);color:var(--accent);border:1px solid var(--line-strong)}
+  .avatar.sm{width:26px;height:26px;font-size:10.5px}
+  .avatar.lg{width:46px;height:46px;font-size:14px}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1px solid transparent;border-radius:999px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;background:none;text-decoration:none;transition:.16s}
+  .btn--primary{background:var(--accent);color:#fff}
+  .btn--ghost{background:#fff;border-color:var(--line-strong);color:var(--ink-2)}
+  .btn--danger{background:var(--danger-soft);border-color:#fecdca;color:var(--danger-ink)}
+  .btn--ok{background:var(--ok-soft);border-color:#abefc6;color:var(--ok)}
+  .btn--sm{padding:5px 11px;font-size:12.5px}
+  .btn--block{width:100%;justify-content:center}
+
+  .eyebrow{margin:0 0 8px;color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  .muted{color:var(--muted)}
+  .small{font-size:12.5px}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.02em}
+  .badge--admin{background:#fef3f2;color:var(--danger-ink);border:1px solid #fecdca}
+  .badge--mod{background:#eef0ff;color:#3538cd;border:1px solid #c7d7fe}
+  .badge--ok{background:var(--ok-soft);color:var(--ok);border:1px solid #abefc6}
+  .badge--warn{background:var(--warn-soft);color:var(--warn);border:1px solid #fedf89}
+  .badge--neutral{background:var(--bg);color:var(--ink-2);border:1px solid var(--line-strong)}
+  .badge--danger{background:var(--danger-soft);color:var(--danger-ink);border:1px solid #fecdca}
+
+  /* ---- home ---- */
+  .hero{max-width:64ch;margin-bottom:26px}
+  .hero h1{font-size:clamp(28px,4vw,38px);margin:6px 0 10px}
+  .hero p{margin:0 0 18px;color:var(--muted);font-size:16px}
+  .cat-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:32px}
+  .cat-card{position:relative;height:92px;border-radius:var(--r);overflow:hidden;display:flex;align-items:flex-end;padding:12px 14px;text-decoration:none;color:#fff;
+    background:linear-gradient(135deg,hsl(var(--hue),68%,58%),hsl(calc(var(--hue) + 34),72%,44%))}
+  .cat-card::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,8,20,0) 30%,rgba(4,8,20,.52))}
+  .cat-card b{position:relative;z-index:1;font-size:14px;color:#fff;letter-spacing:-.01em}
+  .cat-card i{position:relative;z-index:1;display:block;font-style:normal;font-size:11px;opacity:.85}
+  .cat-card.has-banner{background:linear-gradient(135deg,#141414,#8e0000)}
+  .cat-card.has-banner::before{content:'banner image';position:absolute;right:10px;top:10px;z-index:1;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:999px}
+
+  .section-head{display:flex;align-items:baseline;gap:12px;margin:0 0 16px}
+  .section-head h2{font-size:19px}
+  .section-head .spacer{margin-left:auto}
+  .toggle{display:inline-flex;border:1px solid var(--line-strong);border-radius:999px;overflow:hidden;background:#fff}
+  .toggle button{font:inherit;font-size:12.5px;font-weight:600;padding:5px 13px;border:0;background:none;color:var(--ink-2);cursor:pointer}
+  .toggle button.on{background:var(--ink);color:#fff}
+
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+  .card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--paper);overflow:hidden;display:flex;flex-direction:column;transition:.18s}
+  .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
+  .card__media{position:relative;aspect-ratio:16/9;display:block;background:linear-gradient(135deg,hsl(var(--hue,220),68%,62%),hsl(calc(var(--hue,220) + 34),72%,46%))}
+  .card__media span{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.94);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+  .card__body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:7px}
+  .card__cat{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);text-decoration:none}
+  .card__title{font-size:16px;margin:0}
+  .card__title a{color:inherit;text-decoration:none}
+  .card__excerpt{margin:0;color:var(--muted);font-size:13px}
+  .card__foot{margin-top:2px;display:flex;align-items:center;gap:14px;color:var(--muted);font-size:12px}
+
+  .stars{display:inline-flex;gap:2px;align-items:center;color:#f59e0b;font-size:13px;letter-spacing:1px}
+  .stars .off{color:var(--line-strong)}
+  .stars.pick{cursor:pointer;font-size:22px;letter-spacing:2px}
+
+  .rail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:34px}
+  .rail .card__media{aspect-ratio:21/9}
+  .rank{position:absolute;z-index:1;left:10px;top:10px;background:rgba(11,18,32,.72);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+
+  .pager{display:flex;justify-content:center;gap:6px;margin-top:26px}
+  .pager button{font:inherit;font-size:12.5px;font-weight:600;min-width:32px;padding:5px 9px;border-radius:var(--r-sm);border:1px solid var(--line-strong);background:#fff;color:var(--ink-2);cursor:pointer}
+  .pager button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* ---- category banner ---- */
+  .banner{position:relative;border-radius:var(--r-lg);overflow:hidden;padding:34px 28px;color:#fff;margin-bottom:24px;
+    background:linear-gradient(120deg,#0b1220 0%,hsl(var(--hue,220),60%,34%) 100%)}
+  .banner::after{content:'category banner image (admin upload)';position:absolute;right:14px;bottom:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.16);padding:3px 9px;border-radius:999px}
+  .banner h1{color:#fff;font-size:clamp(22px,3.4vw,30px);margin:6px 0 8px}
+  .banner p{margin:0;max-width:62ch;color:rgba(255,255,255,.85);font-size:14px}
+  .banner .eyebrow{color:#a5b4fc}
+
+  /* ---- post page ---- */
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;align-items:start}
+  .panel{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--paper);padding:26px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px solid var(--line-strong);background:#fff;font-size:12px;font-weight:600;color:var(--ink-2);text-decoration:none}
+  .chip::before{content:'';width:7px;height:7px;border-radius:50%;background:hsl(var(--hue),70%,55%)}
+  .post-title{font-size:clamp(23px,3.2vw,31px);margin:12px 0 14px}
+  .byline{display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .byline .who{display:flex;flex-direction:column;font-size:13px}
+  .byline .who strong{color:var(--ink)}
+  .byline .who span{color:var(--muted);font-size:12px}
+  .byline .acts{margin-left:auto;display:flex;gap:8px}
+
+  .rating-box{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:18px 0;padding:16px 18px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg)}
+  .rating-box .score{font-size:33px;font-weight:800;color:var(--ink);line-height:1}
+  .rating-box .meta{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+  .rating-box .mine{margin-left:auto;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+  .rating-box .mine b{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+
+  .cover{aspect-ratio:16/9;border-radius:var(--r);margin:20px 0 24px;display:grid;place-items:center;color:rgba(255,255,255,.92);
+    background:linear-gradient(135deg,hsl(var(--hue),68%,62%),hsl(calc(var(--hue) + 34),72%,46%));font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+  .prose{font-family:var(--font-serif);font-size:16.5px;line-height:1.75;color:#243044}
+  .prose h2{font-family:var(--font-sans);font-size:19px;margin:26px 0 10px}
+  .prose p{margin:0 0 16px}
+  .prose ul{margin:0 0 16px;padding-left:22px}
+  .prose li{margin-bottom:6px}
+
+  .comments{margin-top:30px;border-top:1px solid var(--line);padding-top:22px}
+  .cf{margin:14px 0 22px}
+  .cf textarea{width:100%;min-height:82px;padding:11px 13px;border:1px solid var(--line-strong);border-radius:var(--r-sm);font:inherit;font-size:14px;color:var(--ink);resize:vertical}
+  .cf .row{display:flex;justify-content:flex-end;gap:8px;margin-top:9px}
+  .citem{display:flex;gap:11px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .citem:last-child{border-bottom:0}
+  .citem .votes{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:30px}
+  .citem .votes button{border:0;background:none;cursor:pointer;font-size:13px;line-height:1;color:var(--muted);padding:3px 5px;border-radius:5px}
+  .citem .votes button:hover{background:var(--bg);color:var(--ink)}
+  .citem .votes .n{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+  .citem .body{flex:1;min-width:0}
+  .citem .head{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:3px}
+  .citem .head strong{color:var(--ink)}
+  .citem .head .muted{font-size:11.5px}
+  .citem .head .spacer{margin-left:auto}
+  .citem .txt{margin:0;font-size:14px;color:var(--ink-2)}
+  .citem .reply{margin-left:38px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;margin-top:9px}
+  .linky{background:none;border:0;font:inherit;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;padding:1px 4px;border-radius:4px}
+  .linky:hover{color:var(--accent)}
+
+  .sidebar{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--paper);padding:18px;position:sticky;top:74px}
+  .sidebar h3{margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .mini{display:flex;gap:10px;align-items:center;text-decoration:none;color:inherit;padding:7px 0}
+  .mini .th{width:42px;height:42px;border-radius:var(--r-sm);flex:none;background:linear-gradient(135deg,hsl(var(--hue,220),68%,62%),hsl(calc(var(--hue,220) + 34),72%,46%))}
+  .mini b{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.35}
+
+  /* ---- admin ---- */
+  .admin-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .admin-head h1{font-size:25px}
+  .subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 22px}
+  .subtabs a{padding:9px 14px;font-size:13.5px;font-weight:600;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent}
+  .subtabs a.on{color:var(--ink);border-bottom-color:var(--accent)}
+  .stat-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:26px}
+  .stat{border:1px solid var(--line);border-radius:var(--r);background:var(--paper);padding:15px 16px}
+  .stat b{display:block;font-size:25px;font-weight:800;color:var(--ink);line-height:1.1}
+  .stat span{font-size:12px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  th{background:var(--bg);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  tr:last-child td{border-bottom:0}
+  td .thumb{width:54px;height:32px;border-radius:6px;background:linear-gradient(135deg,hsl(var(--hue,220),68%,60%),hsl(calc(var(--hue,220) + 34),72%,46%))}
+  code{font-family:var(--font-mono);font-size:12px;background:var(--bg);padding:1px 6px;border-radius:4px;border:1px solid var(--line)}
+  .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:20px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12.5px;font-weight:600;color:var(--ink)}
+  .field input,.field select{padding:9px 11px;border:1px solid var(--line-strong);border-radius:var(--r-sm);font:inherit;font-size:13.5px;color:var(--ink);background:#fff}
+  .field .hint{font-size:11.5px;color:var(--muted)}
+  .drop{border:1px dashed var(--line-strong);border-radius:var(--r-sm);background:var(--bg);padding:16px;text-align:center;font-size:12.5px;color:var(--muted)}
+  .report{border:1px solid var(--line);border-radius:var(--r);background:var(--paper);padding:15px 17px;margin-bottom:12px;display:flex;gap:16px;align-items:flex-start}
+  .report .why{flex:1;min-width:0}
+  .report .reason{margin:5px 0 7px;font-size:13.5px;color:var(--ink)}
+  .report .acts{display:flex;gap:8px;flex:none}
+
+  /* ---- pending ---- */
+  .center{min-height:62vh;display:grid;place-items:center;padding:40px 20px}
+  .pending{max-width:470px;text-align:center;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--paper);padding:38px 32px}
+  .pending .ico{width:52px;height:52px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;background:var(--warn-soft);border:1px solid #fedf89;font-size:23px}
+  .steps{text-align:left;margin:22px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+  .steps li{display:flex;gap:11px;font-size:13px;color:var(--ink-2)}
+  .steps .n{flex:none;width:21px;height:21px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:700}
+
+  .empty{padding:44px 20px;text-align:center;border:1px dashed var(--line-strong);border-radius:var(--r-lg);background:var(--paper);color:var(--muted)}
+
+  @media (max-width:900px){
+    .cat-strip,.rail{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .layout{grid-template-columns:1fr}
+    .stat-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .sidebar{position:static}
+  }
+  @media (max-width:640px){
+    .grid,.cat-strip,.rail,.form-grid,.stat-row{grid-template-columns:1fr}
+    .search{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <b>SAU Community</b>
+  <span class="tag">design preview · v2 palette</span>
+  <span>Static mockup of the approved plan — not the running app. Now using the University of South Asia crest palette (deep red / black / warm off-white). The real app renders the crest PNG; this mockup stands in with a styled wordmark. Click the tabs to move between screens.</span>
+</div>
+
+<div class="tabs">
+  <button class="on" data-goto="home">Home</button>
+  <button data-goto="category">Category</button>
+  <button data-goto="post">Post + rating + comments</button>
+  <button data-goto="admin-categories">Admin · Categories</button>
+  <button data-goto="admin-users">Admin · Approvals</button>
+  <button data-goto="admin-reports">Moderation · Reports</button>
+  <button data-goto="pending">Pending account</button>
+</div>
+
+<!-- ================= HOME ================= -->
+<section class="screen on" id="home">
+  <div class="navbar">
+    <div class="inner">
+      <a class="logo" href="#">SAU<span>Community</span></a>
+      <div class="search"><input placeholder="Search posts, notices, people…" /></div>
+      <div class="nav-actions">
+        <a class="nav-link" href="#">Notices</a>
+        <a class="nav-link" href="#">Events</a>
+        <button class="btn btn--primary btn--sm">＋ Write</button>
+        <div class="avatar" title="demo">DE</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="hero">
+      <p class="eyebrow">University of South Asia</p>
+      <h1>What the campus is talking about</h1>
+      <p>Posts, notes and notices from students and faculty — rated and discussed by the community.</p>
+      <button class="btn btn--primary">＋ Write a post</button>
+      <button class="btn btn--ghost">Browse categories</button>
+    </div>
+
+    <div class="cat-strip">
+      <a class="cat-card has-banner" style="--hue:265" href="#"><b>Computer Science &amp; Engineering</b><i>128 posts</i></a>
+      <a class="cat-card" style="--hue:210" href="#"><b>Science</b><i>43 posts</i></a>
+      <a class="cat-card" style="--hue:28" href="#"><b>Cinema</b><i>17 posts</i></a>
+      <a class="cat-card" style="--hue:168" href="#"><b>Design</b><i>31 posts</i></a>
+      <a class="cat-card" style="--hue:96" href="#"><b>Food</b><i>22 posts</i></a>
+      <a class="cat-card" style="--hue:220" href="#"><b>General</b><i>54 posts</i></a>
+    </div>
+
+    <div class="section-head">
+      <h2>Top rated</h2>
+      <span class="muted small">ranked by weighted score, not raw average</span>
+      <span class="spacer"></span>
+      <a class="small" href="#" style="font-weight:600;text-decoration:none">See all →</a>
+    </div>
+    <div class="rail">
+      <div class="card">
+        <a class="card__media" style="--hue:265" href="#"><span class="rank">#1</span><span>Technology</span></a>
+        <div class="card__body">
+          <h3 class="card__title">Why your next laptop might not have a fan</h3>
+          <div class="card__foot"><span class="stars">★★★★★</span><b style="color:var(--ink)">4.9</b><span>· 23 ratings</span><span>87% positive</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <a class="card__media" style="--hue:210" href="#"><span class="rank">#2</span><span>Science</span></a>
+        <div class="card__body">
+          <h3 class="card__title">How CRISPR rewrote the rules of biology</h3>
+          <div class="card__foot"><span class="stars">★★★★<i class="off">★</i></span><b style="color:var(--ink)">4.6</b><span>· 18 ratings</span><span>83% positive</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <a class="card__media" style="--hue:340" href="#"><span class="rank">#3</span><span>Art</span></a>
+        <div class="card__body">
+          <h3 class="card__title">The quiet craft of analog photography</h3>
+          <div class="card__foot"><span class="stars">★★★★<i class="off">★</i></span><b style="color:var(--ink)">4.4</b><span>· 9 ratings</span><span>78% positive</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Latest</h2>
+      <span class="spacer"></span>
+      <div class="toggle">
+        <button class="on">Latest</button>
+        <button>Top rated</button>
+        <button>Most discussed</button>
+      </div>
+    </div>
+    <div class="grid">
+      <article class="card">
+        <a class="card__media" style="--hue:265" href="#"><span>Technology</span></a>
+        <div class="card__body">
+          <a class="card__cat" href="#">Technology</a>
+          <h2 class="card__title"><a href="#">The sound engineers behind live music</a></h2>
+          <p class="card__excerpt">What sounds effortless from the audience is a mix built and rebuilt all night, one room at a time.</p>
+          <div class="card__foot"><span class="stars">★★★★<i class="off">★</i></span><span>4.2 (11)</span><span>💬 7</span><span>· 2 days ago</span></div>
+        </div>
+      </article>
+      <article class="card">
+        <a class="card__media" style="--hue:168" href="#"><span>Design</span></a>
+        <div class="card__body">
+          <a class="card__cat" href="#">Design</a>
+          <h2 class="card__title"><a href="#">Designing interfaces people actually trust</a></h2>
+          <p class="card__excerpt">Trust is rarely earned by a large feature. It is earned by small consistencies repeated until the user stops checking.</p>
+          <div class="card__foot"><span class="stars">★★★★<i class="off">★</i></span><span>4.0 (6)</span><span>💬 3</span><span>· 5 days ago</span></div>
+        </div>
+      </article>
+      <article class="card">
+        <a class="card__media" style="--hue:96" href="#"><span>Food</span></a>
+        <div class="card__body">
+          <a class="card__cat" href="#">Food</a>
+          <h2 class="card__title"><a href="#">A week of cooking from one pantry</a></h2>
+          <p class="card__excerpt">The constraint is the recipe. With a fixed shelf of ingredients, the interesting decisions move elsewhere.</p>
+          <div class="card__foot"><span class="stars">★★★<i class="off">★★</i></span><span>3.1 (8)</span><span>💬 12</span><span>· 1 week ago</span></div>
+        </div>
+      </article>
+      <article class="card">
+        <a class="card__media" style="--hue:210" href="#"><span>Science</span></a>
+        <div class="card__body">
+          <a class="card__cat" href="#">Science</a>
+          <h2 class="card__title"><a href="#">How CRISPR rewrote the rules of biology</a></h2>
+          <p class="card__excerpt">For decades, editing a genome meant expensive, imprecise work. CRISPR turned it into find-and-replace.</p>
+          <div class="card__foot"><span class="stars">★★★★<i class="off">★</i></span><span>4.6 (18)</span><span>💬 21</span><span>· 2 weeks ago</span></div>
+        </div>
+      </article>
+    </div>
+
+    <div class="pager">
+      <button>‹</button><button class="on">1</button><button>2</button><button>3</button><button>…</button><button>12</button><button>›</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CATEGORY ================= -->
+<section class="screen" id="category">
+  <div class="navbar">
+    <div class="inner">
+      <a class="logo" href="#">SAU<span>Community</span></a>
+      <div class="search"><input placeholder="Search posts, notices, people…" /></div>
+      <div class="nav-actions">
+        <button class="btn btn--primary btn--sm">＋ Write</button>
+        <div class="avatar">DE</div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="banner" style="--hue:265">
+      <p class="eyebrow">Category</p>
+      <h1>Computer Science &amp; Engineering</h1>
+      <p>Course notes, project write-ups, internship leads and everything CSE. 128 posts · 1,940 ratings.</p>
+    </div>
+
+    <div class="section-head">
+      <h2>Posts in this category</h2>
+      <span class="spacer"></span>
+      <div class="toggle"><button class="on">Latest</button><button>Top rated</button><button>Most discussed</button></div>
+    </div>
+
+    <div class="grid">
+      <article class="card">
+        <a class="card__media" style="--hue:265" href="#"><span>Technology</span></a>
+        <div class="card__body">
+          <a class="card__cat" href="#">Technology</a>
+          <h2 class="card__title"><a href="#">Why your next laptop might not have a fan</a></h2>
+          <p class="card__excerpt">Fanless laptops used to mean slow laptops. That trade-off is disappearing.</p>
+          <div class="card__foot"><span class="stars">★★★★★</span><span>4.9 (23)</span><span>💬 14</span><span>· 3 days ago</span></div>
+        </div>
+      </article>
+      <article class="card">
+        <a class="card__media" style="--hue:265" href="#"><span>Technology</span></a>
+        <div class="card__body">
+          <a class="card__cat" href="#">Technology</a>
+          <h2 class="card__title"><a href="#">The sound engineers behind live music</a></h2>
+          <p class="card__excerpt">What sounds effortless from the audience is a mix built and rebuilt all night.</p>
+          <div class="card__foot"><span class="stars">★★★★<i class="off">★</i></span><span>4.2 (11)</span><span>💬 7</span><span>· 2 days ago</span></div>
+        </div>
+      </article>
+    </div>
+    <div class="pager"><button class="on">1</button><button>2</button><button>›</button></div>
+  </div>
+</section>
+
+<!-- ================= POST ================= -->
+<section class="screen" id="post">
+  <div class="navbar">
+    <div class="inner">
+      <a class="logo" href="#">SAU<span>Community</span></a>
+      <div class="search"><input placeholder="Search posts, notices, people…" /></div>
+      <div class="nav-actions">
+        <button class="btn btn--primary btn--sm">＋ Write</button>
+        <div class="avatar">DE</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="layout">
+      <article class="panel">
+        <a class="chip" style="--hue:265" href="#">Technology</a>
+        <h1 class="post-title">Why your next laptop might not have a fan</h1>
+
+        <div class="byline">
+          <div class="avatar lg">LK</div>
+          <div class="who">
+            <strong>lamadev <span class="badge badge--mod">mod</span></strong>
+            <span>CSE · Batch 2022 · Posted 2 days ago · 412 views</span>
+          </div>
+          <div class="acts">
+            <button class="btn btn--ghost btn--sm">✎ Edit</button>
+            <button class="btn btn--danger btn--sm">🗑 Remove</button>
+          </div>
+        </div>
+
+        <div class="rating-box">
+          <div>
+            <div class="score">4.9</div>
+          </div>
+          <div class="meta">
+            <span class="stars" style="font-size:15px">★★★★★</span>
+            <span>23 ratings · <b style="color:var(--ok)">87% positive</b></span>
+          </div>
+          <div class="mine">
+            <b>Your rating</b>
+            <span class="stars pick" id="picker" title="Click to rate">
+              <i data-v="1">★</i><i data-v="2">★</i><i data-v="3">★</i><i data-v="4">★</i><i data-v="5">★</i>
+            </span>
+            <span class="small muted" id="pickmsg">You rated this 4</span>
+          </div>
+        </div>
+
+        <div class="cover" style="--hue:265">technology</div>
+
+        <div class="prose">
+          <p>Fanless laptops used to mean slow laptops. That trade-off is disappearing, and the reason is less about raw speed than about heat density.</p>
+          <h2>The efficiency plateau</h2>
+          <p>Each generation of chip does the same work with less power. Less power means less heat, and less heat means you can pass it through the chassis instead of blowing it out the side.</p>
+          <ul>
+            <li>No cut means no relief</li>
+            <li>The camera's movement becomes the pacing</li>
+            <li>Mistakes are unrecoverable</li>
+          </ul>
+          <p>The catch is sustained load: burst performance looks great on a spec sheet, but a thin chassis still throttles under a long export.</p>
+        </div>
+
+        <div class="comments">
+          <div class="section-head" style="margin-bottom:6px">
+            <h2 style="font-size:17px">14 comments</h2>
+            <span class="spacer"></span>
+            <div class="toggle"><button class="on">Top</button><button>Newest</button></div>
+          </div>
+
+          <div class="cf">
+            <textarea placeholder="Add a comment… (plain text — HTML is escaped, no formatting tricks)"></textarea>
+            <div class="row">
+              <button class="btn btn--ghost btn--sm">Cancel</button>
+              <button class="btn btn--primary btn--sm">Post comment</button>
+            </div>
+          </div>
+
+          <div class="citem">
+            <div class="votes">
+              <button data-vote="up">▲</button>
+              <span class="n" data-n="12">12</span>
+              <button data-vote="down">▼</button>
+            </div>
+            <div class="body">
+              <div class="head">
+                <div class="avatar sm">RH</div>
+                <strong>rahul</strong>
+                <span class="badge badge--neutral">student</span>
+                <span class="muted">· 2 days ago</span>
+                <span class="spacer"></span>
+                <button class="linky">Reply</button>
+                <button class="linky">Report</button>
+              </div>
+              <p class="txt">Excellent write-up. The heat-density point is exactly why my 2020 ultrabook still throttles in a 30°C lab.</p>
+
+              <div class="reply">
+                <div class="head">
+                  <div class="avatar sm">LK</div>
+                  <strong>lamadev</strong>
+                  <span class="badge badge--mod">mod</span>
+                  <span class="muted">· 1 day ago</span>
+                  <span class="spacer"></span>
+                  <button class="linky">Reply</button>
+                </div>
+                <p class="txt">Same — ambient temperature matters far more than the spec sheet suggests.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="citem">
+            <div class="votes">
+              <button data-vote="up">▲</button>
+              <span class="n" data-n="5">5</span>
+              <button data-vote="down">▼</button>
+            </div>
+            <div class="body">
+              <div class="head">
+                <div class="avatar sm">NF</div>
+                <strong>nusrat</strong>
+                <span class="badge badge--ok">faculty</span>
+                <span class="muted">· 1 day ago</span>
+                <span class="spacer"></span>
+                <button class="linky">Reply</button>
+                <button class="linky">Report</button>
+              </div>
+              <p class="txt">Worth adding: sustained clocks are now the real differentiator. Would you cover battery cycles in a follow-up?</p>
+            </div>
+          </div>
+
+          <div class="citem">
+            <div class="votes">
+              <button data-vote="up">▲</button>
+              <span class="n" data-n="1">1</span>
+              <button data-vote="down">▼</button>
+            </div>
+            <div class="body">
+              <div class="head">
+                <div class="avatar sm">TA</div>
+                <strong>tanvir</strong>
+                <span class="muted">· 6 hours ago</span>
+                <span class="spacer"></span>
+                <button class="linky">Reply</button>
+                <button class="linky">Report</button>
+              </div>
+              <p class="txt" style="opacity:.6"><em>Comment removed by a moderator.</em></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="sidebar">
+        <h3>More in Technology</h3>
+        <a class="mini" style="--hue:265" href="#"><span class="th"></span><b>The sound engineers behind live music</b></a>
+        <a class="mini" style="--hue:265" href="#"><span class="th"></span><b>USB-C cables that actually charge at 100W</b></a>
+        <a class="mini" style="--hue:265" href="#"><span class="th"></span><b>Setting up a lab PC on a student budget</b></a>
+        <h3 style="margin-top:18px">Top rated overall</h3>
+        <a class="mini" style="--hue:210" href="#"><span class="th"></span><b>How CRISPR rewrote the rules of biology</b></a>
+        <a class="mini" style="--hue:340" href="#"><span class="th"></span><b>The quiet craft of analog photography</b></a>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ADMIN · CATEGORIES ================= -->
+<section class="screen" id="admin-categories">
+  <div class="navbar">
+    <div class="inner">
+      <a class="logo" href="#">SAU<span>Community</span></a>
+      <div class="nav-actions">
+        <span class="badge badge--admin">admin</span>
+        <div class="avatar">AD</div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="admin-head">
+      <h1>Admin</h1>
+      <span class="badge badge--admin">admin only</span>
+    </div>
+    <div class="subtabs">
+      <a href="#">Dashboard</a>
+      <a class="on" href="#">Categories</a>
+      <a href="#">Users</a>
+      <a href="#">Reports</a>
+      <a href="#">Audit log</a>
+    </div>
+
+    <div class="section-head">
+      <h2>Categories</h2>
+      <span class="muted small">code is the stable key used in URLs and APIs</span>
+      <span class="spacer"></span>
+      <button class="btn btn--primary btn--sm">＋ New category</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Banner</th><th>Code</th><th>Name</th><th>Slug</th><th>Posts</th><th>Order</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr><td><div class="thumb" style="--hue:265"></div></td><td><code>cse</code></td><td>Computer Science &amp; Engineering</td><td><code>cse</code></td><td>128</td><td>10</td><td><span class="badge badge--ok">active</span></td><td><button class="linky">Edit</button></td></tr>
+        <tr><td><div class="thumb" style="--hue:210"></div></td><td><code>science</code></td><td>Science</td><td><code>science</code></td><td>43</td><td>20</td><td><span class="badge badge--ok">active</span></td><td><button class="linky">Edit</button></td></tr>
+        <tr><td><div class="thumb" style="--hue:28"></div></td><td><code>cinema</code></td><td>Cinema</td><td><code>cinema</code></td><td>17</td><td>40</td><td><span class="badge badge--ok">active</span></td><td><button class="linky">Edit</button></td></tr>
+        <tr><td><div class="thumb" style="--hue:96"></div></td><td><code>food</code></td><td>Food</td><td><code>food</code></td><td>22</td><td>60</td><td><span class="badge badge--neutral">hidden</span></td><td><button class="linky">Edit</button></td></tr>
+        <tr><td><div class="thumb" style="--hue:220"></div></td><td><code>general</code></td><td>General</td><td><code>general</code></td><td>54</td><td>99</td><td><span class="badge badge--ok">active</span></td><td><button class="linky">Edit</button></td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">Deleting a category that still has posts returns <code>409</code> — reassign the posts first.</p>
+
+    <div class="section-head" style="margin-top:30px"><h2 style="font-size:17px">Edit: Computer Science &amp; Engineering</h2></div>
+    <div class="form-grid">
+      <div class="field"><label>Code</label><input value="cse" /><span class="hint">Cannot be changed once posts exist.</span></div>
+      <div class="field"><label>Name</label><input value="Computer Science &amp; Engineering" /></div>
+      <div class="field"><label>Slug</label><input value="cse" /></div>
+      <div class="field"><label>Accent hue</label><input type="number" value="265" /><span class="hint">Used for the gradient when no banner is set.</span></div>
+      <div class="field" style="grid-column:1/-1"><label>Description</label><input value="Course notes, project write-ups, internship leads and everything CSE." /></div>
+      <div class="field" style="grid-column:1/-1"><label>Banner image</label><div class="drop">Drop an image here or click to upload · PNG, JPEG, WebP · max 5 MB → stored as <code>banner_img</code></div></div>
+      <div class="field"><label>Sort order</label><input type="number" value="10" /></div>
+      <div class="field"><label>Visible</label><select><option>Active</option><option>Hidden</option></select></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn--ghost">Cancel</button>
+      <button class="btn btn--primary">Save category</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ADMIN · USERS ================= -->
+<section class="screen" id="admin-users">
+  <div class="navbar">
+    <div class="inner">
+      <a class="logo" href="#">SAU<span>Community</span></a>
+      <div class="nav-actions"><span class="badge badge--admin">admin</span><div class="avatar">AD</div></div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="admin-head"><h1>Users</h1></div>
+    <div class="subtabs">
+      <a href="#">Dashboard</a><a href="#">Categories</a>
+      <a class="on" href="#">Users</a><a href="#">Reports</a><a href="#">Audit log</a>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><b>3</b><span>Awaiting approval</span></div>
+      <div class="stat"><b>248</b><span>Active members</span></div>
+      <div class="stat"><b>6</b><span>Moderators</span></div>
+      <div class="stat"><b>2</b><span>Suspended</span></div>
+    </div>
+
+    <div class="section-head">
+      <h2>Awaiting approval</h2>
+      <span class="muted small">new signups stay pending until approved</span>
+    </div>
+    <table>
+      <thead><tr><th>Member</th><th>Email</th><th>Department</th><th>Requested</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:9px"><div class="avatar sm">SM</div><b style="color:var(--ink)">sadia.rahman</b></div></td>
+          <td>sadia.rahman@student.sau.edu.bd</td><td>CSE · Batch 2023</td><td class="muted">2 hours ago</td>
+          <td style="text-align:right"><button class="btn btn--ok btn--sm">Approve</button> <button class="btn btn--ghost btn--sm">Reject</button></td>
+        </tr>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:9px"><div class="avatar sm">MH</div><b style="color:var(--ink)">mahin.hasan</b></div></td>
+          <td>mahin.hasan@student.sau.edu.bd</td><td>EEE · Batch 2022</td><td class="muted">5 hours ago</td>
+          <td style="text-align:right"><button class="btn btn--ok btn--sm">Approve</button> <button class="btn btn--ghost btn--sm">Reject</button></td>
+        </tr>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:9px"><div class="avatar sm">??</div><b style="color:var(--ink)">guest_9921</b></div></td>
+          <td>noreply@example.com</td><td class="muted">— not provided</td><td class="muted">1 day ago</td>
+          <td style="text-align:right"><button class="btn btn--ok btn--sm">Approve</button> <button class="btn btn--ghost btn--sm">Reject</button></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-head" style="margin-top:28px"><h2>Active members</h2></div>
+    <table>
+      <thead><tr><th>Member</th><th>Email</th><th>Posts</th><th>Role</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:9px"><div class="avatar sm">AD</div><b style="color:var(--ink)">admin</b></div></td>
+          <td>admin@example.com</td><td>0</td>
+          <td><select style="padding:5px 8px;border:1px solid var(--line-strong);border-radius:6px;font:inherit;font-size:12.5px"><option>user</option><option>moderator</option><option selected>admin</option></select></td>
+          <td><span class="badge badge--ok">active</span></td>
+          <td style="text-align:right"><button class="btn btn--ghost btn--sm" disabled style="opacity:.5">Suspend</button></td>
+        </tr>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:9px"><div class="avatar sm">LK</div><b style="color:var(--ink)">lamadev</b></div></td>
+          <td>lama@example.com</td><td>5</td>
+          <td><select style="padding:5px 8px;border:1px solid var(--line-strong);border-radius:6px;font:inherit;font-size:12.5px"><option>user</option><option selected>moderator</option><option>admin</option></select></td>
+          <td><span class="badge badge--ok">active</span></td>
+          <td style="text-align:right"><button class="btn btn--ghost btn--sm">Suspend</button></td>
+        </tr>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:9px"><div class="avatar sm">TA</div><b style="color:var(--ink)">tanvir</b></div></td>
+          <td>tanvir@example.com</td><td>3</td>
+          <td><select style="padding:5px 8px;border:1px solid var(--line-strong);border-radius:6px;font:inherit;font-size:12.5px"><option selected>user</option><option>moderator</option><option>admin</option></select></td>
+          <td><span class="badge badge--danger">suspended</span></td>
+          <td style="text-align:right"><button class="btn btn--ok btn--sm">Reinstate</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="small muted">An admin cannot suspend or demote themselves — that is what stops the only admin locking everyone out.</p>
+  </div>
+</section>
+
+<!-- ================= MODERATION · REPORTS ================= -->
+<section class="screen" id="admin-reports">
+  <div class="navbar">
+    <div class="inner">
+      <a class="logo" href="#">SAU<span>Community</span></a>
+      <div class="nav-actions"><span class="badge badge--mod">moderator</span><div class="avatar">LK</div></div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="admin-head">
+      <h1>Moderation</h1>
+      <span class="badge badge--mod">moderator + admin</span>
+    </div>
+    <div class="subtabs">
+      <a href="#">Dashboard</a><a href="#">Categories</a><a href="#">Users</a>
+      <a class="on" href="#">Reports</a><a href="#">Audit log</a>
+    </div>
+
+    <div class="section-head">
+      <h2>Open reports</h2>
+      <span class="muted small">4 waiting</span>
+      <span class="spacer"></span>
+      <div class="toggle"><button class="on">Open</button><button>Resolved</button><button>Dismissed</button></div>
+    </div>
+
+    <div class="report">
+      <div class="why">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="badge badge--danger">comment</span>
+          <b style="color:var(--ink)">"pdf link pls" on “How CRISPR rewrote the rules of biology”</b>
+          <span class="muted small">· reported by rahul · 40 min ago</span>
+        </div>
+        <p class="reason"><b>Reason:</b> spam — repeated in five threads</p>
+      </div>
+      <div class="acts">
+        <button class="btn btn--danger btn--sm">Remove comment</button>
+        <button class="btn btn--ghost btn--sm">Dismiss</button>
+      </div>
+    </div>
+
+    <div class="report">
+      <div class="why">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="badge badge--warn">post</span>
+          <b style="color:var(--ink)">Old exam question paper dump</b>
+          <span class="muted small">· reported by nusrat · 3 hours ago</span>
+        </div>
+        <p class="reason"><b>Reason:</b> leaked material, possibly copyrighted</p>
+      </div>
+      <div class="acts">
+        <button class="btn btn--danger btn--sm">Remove post</button>
+        <button class="btn btn--ghost btn--sm">Dismiss</button>
+      </div>
+    </div>
+
+    <div class="report">
+      <div class="why">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="badge badge--danger">comment</span>
+          <b style="color:var(--ink)">Personal attack in “A week of cooking from one pantry”</b>
+          <span class="muted small">· reported by tanvir · 1 day ago</span>
+        </div>
+        <p class="reason"><b>Reason:</b> harassment</p>
+      </div>
+      <div class="acts">
+        <button class="btn btn--danger btn--sm">Remove comment</button>
+        <button class="btn btn--ghost btn--sm">Dismiss</button>
+      </div>
+    </div>
+
+    <p class="small muted">Every one of these actions writes a row to <code>audit_log</code> with the actor, target and IP.</p>
+  </div>
+</section>
+
+<!-- ================= PENDING ================= -->
+<section class="screen" id="pending">
+  <div class="navbar">
+    <div class="inner">
+      <a class="logo" href="#">SAU<span>Community</span></a>
+      <div class="nav-actions"><a class="nav-link" href="#">Sign out</a></div>
+    </div>
+  </div>
+  <div class="center">
+    <div class="pending">
+      <div class="ico">⏳</div>
+      <h1 style="font-size:22px;margin-bottom:8px">Your account is awaiting approval</h1>
+      <p class="muted" style="margin:0">Thanks for signing up, <b style="color:var(--ink)">sadia.rahman</b>. A moderator will review your account shortly.</p>
+      <ul class="steps">
+        <li><span class="n">1</span><span>You can browse every post and category right now.</span></li>
+        <li><span class="n">2</span><span>Once approved, you can publish, rate and comment.</span></li>
+        <li><span class="n">3</span><span>You will see a banner the next time you sign in after approval.</span></li>
+      </ul>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:24px">
+        <button class="btn btn--primary">Browse the community</button>
+        <button class="btn btn--ghost">Complete your profile</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // tab switching
+  const screens = [...document.querySelectorAll('.screen')];
+  const tabs = [...document.querySelectorAll('.tabs button')];
+  function show(id){
+    screens.forEach(s => s.classList.toggle('on', s.id === id));
+    tabs.forEach(t => t.classList.toggle('on', t.dataset.goto === id));
+    window.scrollTo({ top: 0 });
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.goto)));
+
+  // interactive star rating
+  const picker = document.getElementById('picker');
+  if (picker){
+    const stars = [...picker.querySelectorAll('i')];
+    const msg = document.getElementById('pickmsg');
+    let value = 4;
+    const paint = (n) => stars.forEach((s,i) => s.style.color = i < n ? '#f59e0b' : '#d3d9e3');
+    paint(value);
+    stars.forEach(s => {
+      s.addEventListener('mouseenter', () => paint(+s.dataset.v));
+      s.addEventListener('click', () => { value = +s.dataset.v; paint(value); msg.textContent = 'You rated this ' + value + ' — saved'; });
+    });
+    picker.addEventListener('mouseleave', () => paint(value));
+  }
+
+  // comment vote toggles
+  document.querySelectorAll('.votes').forEach(v => {
+    const n = v.querySelector('.n');
+    let base = +n.dataset.n, mine = 0;
+    const up = v.querySelector('[data-vote="up"]'), down = v.querySelector('[data-vote="down"]');
+    const refresh = () => { n.textContent = base + mine; up.style.color = mine === 1 ? '#4f46e5' : ''; down.style.color = mine === -1 ? '#d92d20' : ''; };
+    const set = (val) => { mine = mine === val ? 0 : val; refresh(); };
+    up.addEventListener('click', () => set(1));
+    down.addEventListener('click', () => set(-1));
+  });
+
+  // sort toggles
+  document.querySelectorAll('.toggle').forEach(g => {
+    g.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      g.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+    }));
+  });
+</script>
+</body>
+</html>
