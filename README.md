@@ -14,7 +14,6 @@ Students and staff publish class notes, project write-ups and study materials; s
 | Backend | Node ESM, Express 4, mysql2 (connection pool), bcryptjs, jsonwebtoken, zod, multer, sanitize-html, express-rate-limit |
 | Database | MySQL 8.4 |
 | Auth | bcrypt (cost 12) + JWT in an `httpOnly`, `sameSite=lax` cookie |
-| Packaging | Docker (multi-stage) + docker compose, nginx serving the SPA and proxying the API |
 
 ---
 
@@ -35,36 +34,12 @@ Students and staff publish class notes, project write-ups and study materials; s
 
 ## Prerequisites
 
-- **Docker + Docker Compose** (the easy path), **or**
-- **Node.js 18+** and a reachable **MySQL 8** (the local-dev path)
+- **Node.js 18+**
+- A reachable **MySQL 8**
 
 ---
 
-## Quick start — Docker
-
-Runs the whole stack (MySQL, a one-shot seed job, the API and nginx) with no local Node or database setup.
-
-```bash
-docker compose up --build
-```
-
-Then open **http://localhost:5183**.
-
-Ports are deliberately offset from their defaults, and the container port is the published port (no translation):
-
-| Service | URL |
-|---|---|
-| Web (nginx) | http://localhost:5183 |
-| API (Express) | http://localhost:8810 |
-| MySQL | 127.0.0.1:3316 |
-
-nginx proxies `/api` and `/uploads` to the API container, so the browser only ever talks to `:5183` and the auth cookie stays same-origin.
-
-Copy `.env.example` to `.env` only if you want to override the built-in defaults (database password, database name, JWT secret). On `up`, the `seed` service creates the schema, applies migrations and loads demo content, then exits — it is safe to re-run and skips seeding when users already exist.
-
----
-
-## Quick start — local development
+## Quick start
 
 ```bash
 npm install          # installs both workspaces (backend + frontend)
@@ -96,15 +71,15 @@ These accounts ship with the project — the seed script creates them, and the s
 
 ```bash
 # create the database if it does not exist (the hyphen needs backticks in SQL)
-docker exec dbms-mysql mysql -uroot -proot \
+mysql -h 127.0.0.1 -P 3307 -uroot -p \
   -e "CREATE DATABASE IF NOT EXISTS \`campus-community\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # import the dump into it
-docker exec -i dbms-mysql mysql -uroot -proot --default-character-set=utf8mb4 \
+mysql -h 127.0.0.1 -P 3307 -uroot -p --default-character-set=utf8mb4 \
   campus-community < db/campus-community.sql
 ```
 
-Adjust the container name (`dbms-mysql`) and credentials to match your own MySQL. The app already points at `DB_NAME=campus-community` on `127.0.0.1:3307`, so once the dump is imported, `npm run dev` serves this data as-is.
+Adjust the host, port and credentials to match your own MySQL. The app already points at `DB_NAME=campus-community` on `127.0.0.1:3307`, so once the dump is imported, `npm run dev` serves this data as-is.
 
 ---
 
@@ -160,7 +135,6 @@ Migrations live in `src/backend/db/migrations/` and are tracked in a `schema_mig
 
 ```
 campus-community/
-├─ docker-compose.yml            db + seed + api + web stack
 ├─ db/campus-community.sql       full schema + data backup (18 tables)
 ├─ public/                       university logo, favicons, manifest (Vite publicDir)
 ├─ src/backend/
@@ -180,7 +154,6 @@ campus-community/
 │  ├─ utils/ApiError.js
 │  └─ uploads/                   runtime upload target (gitignored)
 └─ src/frontend/
-   ├─ nginx.conf                 SPA + /api and /uploads proxy (production image)
    └─ src/
       ├─ App.jsx                 router + RequireAuth guard, lazy /write and /admin
       ├─ api/axios.js            shared instance + error helpers
@@ -245,7 +218,7 @@ New accounts start as `pending`; a `requireActive` middleware blocks pending/sus
 - Login returns a single `401` for both "unknown user" and "wrong password" to prevent username enumeration, and `/login` + `/register` are rate limited.
 - Rich text is sanitized with `sanitize-html` on write and again with `DOMPurify` on render.
 - Uploads are size-capped, MIME-allow-listed, and renamed; the JSON body is capped at 1 MB.
-- Uploaded covers and PDFs live in `src/backend/uploads` (a named volume in compose) so they survive rebuilds.
+- Uploaded covers and PDFs live in `src/backend/uploads`.
 
 ---
 
@@ -253,6 +226,6 @@ New accounts start as `pending`; a `requireActive` middleware blocks pending/sus
 
 - **Covers.** A post has one cover image, shown at 16:9 everywhere, so supply a **1280×720** image. Posts without one render a generated SVG placeholder (`CoverArt.jsx`).
 - **Rich text.** The quill toolbar omits the image button; cover images go through `/api/upload` to keep post bodies small.
-- **Production cookies.** Over plain HTTP (the Docker stack on localhost), set `COOKIE_SECURE=false` or the browser discards the auth cookie and login silently fails. Behind a real TLS terminator, drop it.
+- **Production cookies.** Over plain HTTP, set `COOKIE_SECURE=false` or the browser discards the auth cookie and login silently fails. Behind a real TLS terminator, drop it.
 - **Vite publicDir** points at the repository-root `public/` folder (the university logo and campus photo) — it must be present at build time.
-- **Branding.** `site.webmanifest`, `package.json` and the compose project name still carry earlier working names ("blog-site", "USA Portal"); the app itself is the University of South Asia community portal. Student project — not an official university service.
+- **Branding.** `site.webmanifest` and `package.json` still carry earlier working names ("blog-site", "USA Portal"); the app itself is the University of South Asia community portal. Student project — not an official university service.
