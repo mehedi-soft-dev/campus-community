@@ -37,95 +37,114 @@ const normalizePost = (row) => ({
 // ratings before it can outrank well-rated ones. See the ORDER BY below.
 const RATING_CONFIDENCE = 5;
 
-/**
- * Post shape + stats. `myRating` takes the viewer's id as its only parameter, so
- * every caller passes `req.user?.id ?? 0` first.
- */
-const postFields = `
-  p.id, p.title, p.\`desc\`, p.img, p.date, p.updated_at AS updatedAt,
-  p.uid, p.status, p.views, p.category_id AS categoryId,
-  c.code AS categoryCode, c.name AS categoryName, c.accent_hue AS categoryHue,
-  c.banner_img AS categoryBanner,
-  u.username, u.img AS userImg, u.role AS authorRole,
-  COALESCE(r.rating_count, 0) AS ratingCount,
-  r.rating_avg AS ratingAvg,
-  r.positive_ratio AS positiveRatio,
-  COALESCE(cm.comment_count, 0) AS commentCount,
-  (SELECT value FROM post_ratings WHERE post_id = p.id AND user_id = ?) AS myRating
-`;
-
-const postJoins = `
-  FROM posts p
-  JOIN users u ON u.id = p.uid
-  JOIN categories c ON c.id = p.category_id
-  LEFT JOIN (
-    SELECT post_id, COUNT(*) AS rating_count, AVG(value) AS rating_avg,
-           SUM(value >= 4) / NULLIF(COUNT(*), 0) AS positive_ratio
-      FROM post_ratings GROUP BY post_id
-  ) r ON r.post_id = p.id
-  LEFT JOIN (
-    SELECT post_id, COUNT(*) AS comment_count
-      FROM comments WHERE status = 'visible' GROUP BY post_id
-  ) cm ON cm.post_id = p.id
-`;
-
 export async function getPosts(req, res) {
   const { category, sort, q, author, page, pageSize } = req.validated.query;
   const viewerId = req.user?.id ?? 0;
 
-  const where = ["p.status = 'published'"];
-  const whereParams = [];
-
-  if (category) {
-    where.push('c.code = ?');
-    whereParams.push(category);
-  }
-  if (author) {
-    where.push('u.username = ?');
-    whereParams.push(author);
-  }
-  if (q) {
-    // Match the body as well as the title: a phrase that only appears in the
-    // article text should still be findable. Neither column is indexed for
-    // this, which is fine at a varsity's scale — a FULLTEXT index (as materials
-    // already has) is the next step if the archive grows.
-    where.push('(p.title LIKE ? OR p.`desc` LIKE ?)');
-    whereParams.push(`%${q}%`, `%${q}%`);
-  }
-
-  const whereSql = `WHERE ${where.join(' AND ')}`;
+  const categoryParam = category ?? null;
+  const authorParam = author ?? null;
+  // Match the body as well as the title: a phrase that only appears in the
+  // article text should still be findable. Neither column is indexed for
+  // this, which is fine at a varsity's scale — a FULLTEXT index (as materials
+  // already has) is the next step if the archive grows.
+  const qPattern = q ? `%${q}%` : null;
 
   const [{ total }] = await query(
-    `SELECT COUNT(*) AS total ${postJoins} ${whereSql}`,
-    whereParams
+    `SELECT COUNT(*) AS total
+       FROM posts p
+       JOIN users u ON u.id = p.uid
+       JOIN categories c ON c.id = p.category_id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS rating_count, AVG(value) AS rating_avg,
+                SUM(value >= 4) / NULLIF(COUNT(*), 0) AS positive_ratio
+           FROM post_ratings GROUP BY post_id
+       ) r ON r.post_id = p.id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS comment_count
+           FROM comments WHERE status = 'visible' GROUP BY post_id
+       ) cm ON cm.post_id = p.id
+      WHERE p.status = 'published'
+        AND (? IS NULL OR c.code = ?)
+        AND (? IS NULL OR u.username = ?)
+        AND (? IS NULL OR p.title LIKE ? OR p.\`desc\` LIKE ?)`,
+    [
+      categoryParam,
+      categoryParam,
+      authorParam,
+      authorParam,
+      qPattern,
+      qPattern,
+      qPattern,
+    ]
   );
 
   // Bayesian ranking: a single 5-star vote must not beat twenty 4.8s.
-  let orderSql = 'ORDER BY p.date DESC, p.id DESC';
-  const orderParams = [];
-
+  let prior = 0;
   if (sort === 'top') {
     const [{ globalAvg }] = await query('SELECT AVG(value) AS globalAvg FROM post_ratings');
-    const prior = Number(globalAvg ?? 0);
-    const m = RATING_CONFIDENCE;
-
-    orderSql = `
-      ORDER BY
-        CASE
-          WHEN COALESCE(r.rating_count, 0) = 0 THEN 0
-          ELSE (r.rating_count / (r.rating_count + ?)) * r.rating_avg
-             + (? / (r.rating_count + ?)) * ?
-        END DESC,
-        COALESCE(r.rating_count, 0) DESC,
-        p.date DESC`;
-    orderParams.push(m, m, m, prior);
+    prior = Number(globalAvg ?? 0);
   }
 
   const offset = (page - 1) * pageSize;
 
   const items = await query(
-    `SELECT ${postFields} ${postJoins} ${whereSql} ${orderSql} LIMIT ? OFFSET ?`,
-    [viewerId, ...whereParams, ...orderParams, pageSize, offset]
+    `SELECT
+       p.id, p.title, p.\`desc\`, p.img, p.date, p.updated_at AS updatedAt,
+       p.uid, p.status, p.views, p.category_id AS categoryId,
+       c.code AS categoryCode, c.name AS categoryName, c.accent_hue AS categoryHue,
+       c.banner_img AS categoryBanner,
+       u.username, u.img AS userImg, u.role AS authorRole,
+       COALESCE(r.rating_count, 0) AS ratingCount,
+       r.rating_avg AS ratingAvg,
+       r.positive_ratio AS positiveRatio,
+       COALESCE(cm.comment_count, 0) AS commentCount,
+       (SELECT value FROM post_ratings WHERE post_id = p.id AND user_id = ?) AS myRating
+       FROM posts p
+       JOIN users u ON u.id = p.uid
+       JOIN categories c ON c.id = p.category_id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS rating_count, AVG(value) AS rating_avg,
+                SUM(value >= 4) / NULLIF(COUNT(*), 0) AS positive_ratio
+           FROM post_ratings GROUP BY post_id
+       ) r ON r.post_id = p.id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS comment_count
+           FROM comments WHERE status = 'visible' GROUP BY post_id
+       ) cm ON cm.post_id = p.id
+      WHERE p.status = 'published'
+        AND (? IS NULL OR c.code = ?)
+        AND (? IS NULL OR u.username = ?)
+        AND (? IS NULL OR p.title LIKE ? OR p.\`desc\` LIKE ?)
+      ORDER BY
+        CASE WHEN ? = 'top' THEN
+          CASE
+            WHEN COALESCE(r.rating_count, 0) = 0 THEN 0
+            ELSE (r.rating_count / (r.rating_count + ?)) * r.rating_avg
+               + (? / (r.rating_count + ?)) * ?
+          END
+        END DESC,
+        CASE WHEN ? = 'top' THEN COALESCE(r.rating_count, 0) END DESC,
+        p.date DESC,
+        p.id DESC
+      LIMIT ? OFFSET ?`,
+    [
+      viewerId,
+      categoryParam,
+      categoryParam,
+      authorParam,
+      authorParam,
+      qPattern,
+      qPattern,
+      qPattern,
+      sort,
+      RATING_CONFIDENCE,
+      RATING_CONFIDENCE,
+      RATING_CONFIDENCE,
+      prior,
+      sort,
+      pageSize,
+      offset,
+    ]
   );
 
   res.json({
@@ -177,7 +196,33 @@ export async function getPost(req, res) {
   const { id } = req.validated.params;
   const viewerId = req.user?.id ?? 0;
 
-  const [post] = await query(`SELECT ${postFields} ${postJoins} WHERE p.id = ?`, [viewerId, id]);
+  const [post] = await query(
+    `SELECT
+       p.id, p.title, p.\`desc\`, p.img, p.date, p.updated_at AS updatedAt,
+       p.uid, p.status, p.views, p.category_id AS categoryId,
+       c.code AS categoryCode, c.name AS categoryName, c.accent_hue AS categoryHue,
+       c.banner_img AS categoryBanner,
+       u.username, u.img AS userImg, u.role AS authorRole,
+       COALESCE(r.rating_count, 0) AS ratingCount,
+       r.rating_avg AS ratingAvg,
+       r.positive_ratio AS positiveRatio,
+       COALESCE(cm.comment_count, 0) AS commentCount,
+       (SELECT value FROM post_ratings WHERE post_id = p.id AND user_id = ?) AS myRating
+       FROM posts p
+       JOIN users u ON u.id = p.uid
+       JOIN categories c ON c.id = p.category_id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS rating_count, AVG(value) AS rating_avg,
+                SUM(value >= 4) / NULLIF(COUNT(*), 0) AS positive_ratio
+           FROM post_ratings GROUP BY post_id
+       ) r ON r.post_id = p.id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS comment_count
+           FROM comments WHERE status = 'visible' GROUP BY post_id
+       ) cm ON cm.post_id = p.id
+      WHERE p.id = ?`,
+    [viewerId, id]
+  );
   if (!post) throw ApiError.notFound('Post not found!');
 
   // Removed posts stay in the database for audit, but are gone for everyone
@@ -209,10 +254,33 @@ export async function addPost(req, res) {
     [title, cleanHtml(desc), img || null, categoryId, req.user.id]
   );
 
-  const [post] = await query(`SELECT ${postFields} ${postJoins} WHERE p.id = ?`, [
-    req.user.id,
-    result.insertId,
-  ]);
+  const [post] = await query(
+    `SELECT
+       p.id, p.title, p.\`desc\`, p.img, p.date, p.updated_at AS updatedAt,
+       p.uid, p.status, p.views, p.category_id AS categoryId,
+       c.code AS categoryCode, c.name AS categoryName, c.accent_hue AS categoryHue,
+       c.banner_img AS categoryBanner,
+       u.username, u.img AS userImg, u.role AS authorRole,
+       COALESCE(r.rating_count, 0) AS ratingCount,
+       r.rating_avg AS ratingAvg,
+       r.positive_ratio AS positiveRatio,
+       COALESCE(cm.comment_count, 0) AS commentCount,
+       (SELECT value FROM post_ratings WHERE post_id = p.id AND user_id = ?) AS myRating
+       FROM posts p
+       JOIN users u ON u.id = p.uid
+       JOIN categories c ON c.id = p.category_id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS rating_count, AVG(value) AS rating_avg,
+                SUM(value >= 4) / NULLIF(COUNT(*), 0) AS positive_ratio
+           FROM post_ratings GROUP BY post_id
+       ) r ON r.post_id = p.id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS comment_count
+           FROM comments WHERE status = 'visible' GROUP BY post_id
+       ) cm ON cm.post_id = p.id
+      WHERE p.id = ?`,
+    [req.user.id, result.insertId]
+  );
   res.status(201).json(normalizePost(post));
 }
 
@@ -231,10 +299,33 @@ export async function updatePost(req, res) {
     [title, cleanHtml(desc), img || null, categoryId, id]
   );
 
-  const [updated] = await query(`SELECT ${postFields} ${postJoins} WHERE p.id = ?`, [
-    req.user.id,
-    id,
-  ]);
+  const [updated] = await query(
+    `SELECT
+       p.id, p.title, p.\`desc\`, p.img, p.date, p.updated_at AS updatedAt,
+       p.uid, p.status, p.views, p.category_id AS categoryId,
+       c.code AS categoryCode, c.name AS categoryName, c.accent_hue AS categoryHue,
+       c.banner_img AS categoryBanner,
+       u.username, u.img AS userImg, u.role AS authorRole,
+       COALESCE(r.rating_count, 0) AS ratingCount,
+       r.rating_avg AS ratingAvg,
+       r.positive_ratio AS positiveRatio,
+       COALESCE(cm.comment_count, 0) AS commentCount,
+       (SELECT value FROM post_ratings WHERE post_id = p.id AND user_id = ?) AS myRating
+       FROM posts p
+       JOIN users u ON u.id = p.uid
+       JOIN categories c ON c.id = p.category_id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS rating_count, AVG(value) AS rating_avg,
+                SUM(value >= 4) / NULLIF(COUNT(*), 0) AS positive_ratio
+           FROM post_ratings GROUP BY post_id
+       ) r ON r.post_id = p.id
+       LEFT JOIN (
+         SELECT post_id, COUNT(*) AS comment_count
+           FROM comments WHERE status = 'visible' GROUP BY post_id
+       ) cm ON cm.post_id = p.id
+      WHERE p.id = ?`,
+    [req.user.id, id]
+  );
   res.json(normalizePost(updated));
 }
 

@@ -4,49 +4,54 @@ import { logAudit } from '../utils/audit.js';
 import { toSqlDate } from '../utils/dates.js';
 import { requireFile, sendDownload } from './file.js';
 
-const ROUTINE_FIELDS = `
-  r.id, r.title, r.semester, r.exam_type AS examType,
-  r.effective_from AS effectiveFrom, r.notes, r.status, r.created_at AS createdAt,
-  r.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName,
-  r.file_id AS fileId, f.filename AS fileFilename, f.original_name AS fileName,
-  f.mime_type AS fileMime, f.kind AS fileKind, f.size_bytes AS fileSize,
-  u.username AS createdBy
-`;
-
-const ROUTINE_JOINS = `
-  FROM exam_routines r
-  LEFT JOIN departments d ON d.id = r.department_id
-  JOIN files f ON f.id = r.file_id
-  JOIN users u ON u.id = r.created_by
-`;
-
 const isStaff = (user) => user && (user.role === 'admin' || user.role === 'moderator');
 
 export async function listRoutines(req, res) {
   const { departmentId, semester, examType, page, pageSize } = req.validated.query;
 
-  const where = [];
-  const params = [];
+  const staff = isStaff(req.user) ? 1 : 0;
+  const departmentParam = departmentId ?? null;
+  const semesterParam = semester ?? null;
+  const examTypeParam = examType ?? null;
 
-  if (!isStaff(req.user)) where.push("r.status = 'published'");
-  if (departmentId) {
-    where.push('(r.department_id = ? OR r.department_id IS NULL)');
-    params.push(departmentId);
-  }
-  if (semester) {
-    where.push('r.semester = ?');
-    params.push(semester);
-  }
-  if (examType) {
-    where.push('r.exam_type = ?');
-    params.push(examType);
-  }
+  const params = [
+    staff,
+    departmentParam,
+    departmentParam,
+    semesterParam,
+    semesterParam,
+    examTypeParam,
+    examTypeParam,
+  ];
 
-  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-
-  const [{ total }] = await query(`SELECT COUNT(*) AS total ${ROUTINE_JOINS} ${whereSql}`, params);
+  const [{ total }] = await query(
+    `SELECT COUNT(*) AS total
+       FROM exam_routines r
+       LEFT JOIN departments d ON d.id = r.department_id
+       JOIN files f ON f.id = r.file_id
+       JOIN users u ON u.id = r.created_by
+      WHERE (? = 1 OR r.status = 'published')
+        AND (? IS NULL OR r.department_id = ? OR r.department_id IS NULL)
+        AND (? IS NULL OR r.semester = ?)
+        AND (? IS NULL OR r.exam_type = ?)`,
+    params
+  );
   const items = await query(
-    `SELECT ${ROUTINE_FIELDS} ${ROUTINE_JOINS} ${whereSql}
+    `SELECT
+       r.id, r.title, r.semester, r.exam_type AS examType,
+       r.effective_from AS effectiveFrom, r.notes, r.status, r.created_at AS createdAt,
+       r.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName,
+       r.file_id AS fileId, f.filename AS fileFilename, f.original_name AS fileName,
+       f.mime_type AS fileMime, f.kind AS fileKind, f.size_bytes AS fileSize,
+       u.username AS createdBy
+       FROM exam_routines r
+       LEFT JOIN departments d ON d.id = r.department_id
+       JOIN files f ON f.id = r.file_id
+       JOIN users u ON u.id = r.created_by
+      WHERE (? = 1 OR r.status = 'published')
+        AND (? IS NULL OR r.department_id = ? OR r.department_id IS NULL)
+        AND (? IS NULL OR r.semester = ?)
+        AND (? IS NULL OR r.exam_type = ?)
       ORDER BY r.created_at DESC, r.id DESC
       LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
@@ -83,9 +88,21 @@ export async function createRoutine(req, res) {
     detail: { title: body.title },
   });
 
-  const [routine] = await query(`SELECT ${ROUTINE_FIELDS} ${ROUTINE_JOINS} WHERE r.id = ?`, [
-    result.insertId,
-  ]);
+  const [routine] = await query(
+    `SELECT
+       r.id, r.title, r.semester, r.exam_type AS examType,
+       r.effective_from AS effectiveFrom, r.notes, r.status, r.created_at AS createdAt,
+       r.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName,
+       r.file_id AS fileId, f.filename AS fileFilename, f.original_name AS fileName,
+       f.mime_type AS fileMime, f.kind AS fileKind, f.size_bytes AS fileSize,
+       u.username AS createdBy
+       FROM exam_routines r
+       LEFT JOIN departments d ON d.id = r.department_id
+       JOIN files f ON f.id = r.file_id
+       JOIN users u ON u.id = r.created_by
+      WHERE r.id = ?`,
+    [result.insertId]
+  );
   res.status(201).json(routine);
 }
 
@@ -124,7 +141,21 @@ export async function updateRoutine(req, res) {
   await query(`UPDATE exam_routines SET ${fields.join(', ')} WHERE id = ?`, [...params, id]);
   await logAudit(req, { action: 'routine.update', entityType: 'exam_routine', entityId: Number(id) });
 
-  const [routine] = await query(`SELECT ${ROUTINE_FIELDS} ${ROUTINE_JOINS} WHERE r.id = ?`, [id]);
+  const [routine] = await query(
+    `SELECT
+       r.id, r.title, r.semester, r.exam_type AS examType,
+       r.effective_from AS effectiveFrom, r.notes, r.status, r.created_at AS createdAt,
+       r.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName,
+       r.file_id AS fileId, f.filename AS fileFilename, f.original_name AS fileName,
+       f.mime_type AS fileMime, f.kind AS fileKind, f.size_bytes AS fileSize,
+       u.username AS createdBy
+       FROM exam_routines r
+       LEFT JOIN departments d ON d.id = r.department_id
+       JOIN files f ON f.id = r.file_id
+       JOIN users u ON u.id = r.created_by
+      WHERE r.id = ?`,
+    [id]
+  );
   res.json(routine);
 }
 

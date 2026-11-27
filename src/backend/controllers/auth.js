@@ -14,10 +14,6 @@ export const authCookieOptions = {
   path: '/',
 };
 
-const PUBLIC_COLUMNS = `u.id, u.username, u.email, u.img, u.role, u.status,
-  u.full_name AS fullName, u.bio, u.batch, u.department_id AS departmentId,
-  d.name AS departmentName`;
-
 export async function register(req, res) {
   const { username, email, password, fullName, batch, departmentId } = req.validated.body;
 
@@ -73,7 +69,11 @@ export async function login(req, res) {
   const token = jwt.sign({ id: user.id }, env.jwt.secret, { expiresIn: env.jwt.expiresIn });
 
   const [profile] = await query(
-    `SELECT ${PUBLIC_COLUMNS} FROM users u
+    `SELECT
+       u.id, u.username, u.email, u.img, u.role, u.status,
+       u.full_name AS fullName, u.bio, u.batch, u.department_id AS departmentId,
+       d.name AS departmentName
+       FROM users u
        LEFT JOIN departments d ON d.id = u.department_id
       WHERE u.id = ?`,
     [user.id]
@@ -94,7 +94,11 @@ export async function logout(req, res) {
 
 export async function me(req, res) {
   const [profile] = await query(
-    `SELECT ${PUBLIC_COLUMNS} FROM users u
+    `SELECT
+       u.id, u.username, u.email, u.img, u.role, u.status,
+       u.full_name AS fullName, u.bio, u.batch, u.department_id AS departmentId,
+       d.name AS departmentName
+       FROM users u
        LEFT JOIN departments d ON d.id = u.department_id
       WHERE u.id = ?`,
     [req.user.id]
@@ -126,7 +130,11 @@ export async function updateMe(req, res) {
   await query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, [...params, req.user.id]);
 
   const [profile] = await query(
-    `SELECT ${PUBLIC_COLUMNS} FROM users u
+    `SELECT
+       u.id, u.username, u.email, u.img, u.role, u.status,
+       u.full_name AS fullName, u.bio, u.batch, u.department_id AS departmentId,
+       d.name AS departmentName
+       FROM users u
        LEFT JOIN departments d ON d.id = u.department_id
       WHERE u.id = ?`,
     [req.user.id]

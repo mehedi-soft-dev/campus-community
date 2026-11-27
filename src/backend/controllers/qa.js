@@ -3,31 +3,6 @@ import { ApiError } from '../utils/ApiError.js';
 import { logAudit } from '../utils/audit.js';
 import { isOwnerOrStaff } from '../middleware/authorize.js';
 
-// Scalar subqueries rather than GROUP BY: the row filter and the answer count
-// then share one shape, COUNT(*) for the total needs no wrapper query, and
-// "unanswered" is one EXISTS instead of a HAVING clause that would have to be
-// duplicated into the count.
-const QUESTION_FIELDS = `
-  q.id, q.title, q.body, q.status, q.views,
-  q.asked_by AS askedById,
-  q.accepted_answer_id AS acceptedAnswerId,
-  q.created_at AS createdAt, q.updated_at AS updatedAt,
-  u.username AS author, u.role AS authorRole, u.img AS authorImg,
-  c.id AS categoryId, c.code AS categoryCode, c.name AS categoryName,
-  c.accent_hue AS categoryHue,
-  (SELECT COUNT(*) FROM answers a
-    WHERE a.question_id = q.id AND a.status = 'published') AS answerCount
-`;
-
-const QUESTION_JOINS = `
-  FROM questions q
-  JOIN users u ON u.id = q.asked_by
-  LEFT JOIN categories c ON c.id = q.category_id
-`;
-
-const HAS_ANSWER = `EXISTS (SELECT 1 FROM answers a
-  WHERE a.question_id = q.id AND a.status = 'published')`;
-
 const toNumber = (value) => Number(value ?? 0);
 
 const normalizeQuestion = (row) => ({
@@ -44,45 +19,85 @@ const normalizeQuestion = (row) => ({
 export async function listQuestions(req, res) {
   const { filter, category, q, page, pageSize } = req.validated.query;
 
-  const where = ["q.status <> 'removed'"];
-  const params = [];
+  if (filter === 'mine' && !req.user) throw ApiError.unauthorized();
 
-  if (category) {
-    where.push('c.code = ?');
-    params.push(category);
-  }
+  const categoryParam = category ?? null;
+  const qPattern = q ? `%${q}%` : null;
+  const askerId = filter === 'mine' ? req.user.id : 0;
 
-  if (q) {
-    where.push('(q.title LIKE ? OR q.body LIKE ?)');
-    params.push(`%${q}%`, `%${q}%`);
-  }
-
-  if (filter === 'unanswered') {
-    where.push(`NOT ${HAS_ANSWER}`);
-  } else if (filter === 'answered') {
-    where.push(HAS_ANSWER);
-  } else if (filter === 'mine') {
-    if (!req.user) throw ApiError.unauthorized();
-    where.push('q.asked_by = ?');
-    params.push(req.user.id);
-  }
-
-  const whereSql = `WHERE ${where.join(' AND ')}`;
+  const params = [
+    categoryParam,
+    categoryParam,
+    qPattern,
+    qPattern,
+    qPattern,
+    filter,
+    filter,
+    filter,
+    filter,
+    askerId,
+  ];
 
   const [{ total }] = await query(
-    `SELECT COUNT(*) AS total ${QUESTION_JOINS} ${whereSql}`,
+    `SELECT COUNT(*) AS total
+       FROM questions q
+       JOIN users u ON u.id = q.asked_by
+       LEFT JOIN categories c ON c.id = q.category_id
+      WHERE q.status <> 'removed'
+        AND (? IS NULL OR c.code = ?)
+        AND (? IS NULL OR q.title LIKE ? OR q.body LIKE ?)
+        AND (
+          ? = 'all'
+          OR (? = 'unanswered' AND NOT EXISTS (
+            SELECT 1 FROM answers a
+             WHERE a.question_id = q.id AND a.status = 'published'
+          ))
+          OR (? = 'answered' AND EXISTS (
+            SELECT 1 FROM answers a
+             WHERE a.question_id = q.id AND a.status = 'published'
+          ))
+          OR (? = 'mine' AND q.asked_by = ?)
+        )`,
     params
   );
 
   // Oldest first when hunting for unanswered questions: the ones that have been
   // waiting longest deserve the attention, not the newest arrival.
-  const orderBy = filter === 'unanswered' ? 'q.created_at ASC' : 'q.created_at DESC';
-
   const items = await query(
-    `SELECT ${QUESTION_FIELDS} ${QUESTION_JOINS} ${whereSql}
-      ORDER BY ${orderBy}
+    `SELECT
+       q.id, q.title, q.body, q.status, q.views,
+       q.asked_by AS askedById,
+       q.accepted_answer_id AS acceptedAnswerId,
+       q.created_at AS createdAt, q.updated_at AS updatedAt,
+       u.username AS author, u.role AS authorRole, u.img AS authorImg,
+       c.id AS categoryId, c.code AS categoryCode, c.name AS categoryName,
+       c.accent_hue AS categoryHue,
+       (SELECT COUNT(*) FROM answers a
+         WHERE a.question_id = q.id AND a.status = 'published') AS answerCount
+       FROM questions q
+       JOIN users u ON u.id = q.asked_by
+       LEFT JOIN categories c ON c.id = q.category_id
+      WHERE q.status <> 'removed'
+        AND (? IS NULL OR c.code = ?)
+        AND (? IS NULL OR q.title LIKE ? OR q.body LIKE ?)
+        AND (
+          ? = 'all'
+          OR (? = 'unanswered' AND NOT EXISTS (
+            SELECT 1 FROM answers a
+             WHERE a.question_id = q.id AND a.status = 'published'
+          ))
+          OR (? = 'answered' AND EXISTS (
+            SELECT 1 FROM answers a
+             WHERE a.question_id = q.id AND a.status = 'published'
+          ))
+          OR (? = 'mine' AND q.asked_by = ?)
+        )
+      ORDER BY
+        CASE WHEN ? = 'unanswered' THEN q.created_at END ASC,
+        q.created_at DESC,
+        q.id DESC
       LIMIT ? OFFSET ?`,
-    [...params, pageSize, (page - 1) * pageSize]
+    [...params, filter, pageSize, (page - 1) * pageSize]
   );
 
   res.json({
@@ -102,7 +117,11 @@ export async function questionStats(req, res) {
   );
   const [{ unanswered }] = await query(
     `SELECT COUNT(*) AS unanswered FROM questions q
-      WHERE q.status <> 'removed' AND NOT ${HAS_ANSWER}`
+      WHERE q.status <> 'removed'
+        AND NOT EXISTS (
+          SELECT 1 FROM answers a
+           WHERE a.question_id = q.id AND a.status = 'published'
+        )`
   );
 
   res.json({
@@ -116,7 +135,20 @@ export async function getQuestion(req, res) {
   const { id } = req.validated.params;
 
   const [question] = await query(
-    `SELECT ${QUESTION_FIELDS} ${QUESTION_JOINS} WHERE q.id = ? AND q.status <> 'removed'`,
+    `SELECT
+       q.id, q.title, q.body, q.status, q.views,
+       q.asked_by AS askedById,
+       q.accepted_answer_id AS acceptedAnswerId,
+       q.created_at AS createdAt, q.updated_at AS updatedAt,
+       u.username AS author, u.role AS authorRole, u.img AS authorImg,
+       c.id AS categoryId, c.code AS categoryCode, c.name AS categoryName,
+       c.accent_hue AS categoryHue,
+       (SELECT COUNT(*) FROM answers a
+         WHERE a.question_id = q.id AND a.status = 'published') AS answerCount
+       FROM questions q
+       JOIN users u ON u.id = q.asked_by
+       LEFT JOIN categories c ON c.id = q.category_id
+      WHERE q.id = ? AND q.status <> 'removed'`,
     [id]
   );
   if (!question) throw ApiError.notFound('Question not found!');
@@ -160,7 +192,20 @@ export async function createQuestion(req, res) {
   });
 
   const [question] = await query(
-    `SELECT ${QUESTION_FIELDS} ${QUESTION_JOINS} WHERE q.id = ?`,
+    `SELECT
+       q.id, q.title, q.body, q.status, q.views,
+       q.asked_by AS askedById,
+       q.accepted_answer_id AS acceptedAnswerId,
+       q.created_at AS createdAt, q.updated_at AS updatedAt,
+       u.username AS author, u.role AS authorRole, u.img AS authorImg,
+       c.id AS categoryId, c.code AS categoryCode, c.name AS categoryName,
+       c.accent_hue AS categoryHue,
+       (SELECT COUNT(*) FROM answers a
+         WHERE a.question_id = q.id AND a.status = 'published') AS answerCount
+       FROM questions q
+       JOIN users u ON u.id = q.asked_by
+       LEFT JOIN categories c ON c.id = q.category_id
+      WHERE q.id = ?`,
     [result.insertId]
   );
   res.status(201).json(normalizeQuestion(question));

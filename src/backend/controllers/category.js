@@ -1,12 +1,6 @@
 import { query } from '../db/pool.js';
 import { ApiError } from '../utils/ApiError.js';
 
-const CATEGORY_FIELDS = `
-  c.id, c.code, c.name, c.slug, c.description,
-  c.banner_img AS bannerImg, c.accent_hue AS accentHue,
-  c.sort_order AS sortOrder, c.is_active AS isActive
-`;
-
 const slugify = (value) =>
   value
     .toLowerCase()
@@ -18,16 +12,20 @@ const slugify = (value) =>
 export async function listCategories(req, res) {
   const includeInactive = req.query.includeInactive === '1' && req.user?.role === 'admin';
   const isStaff = req.user?.role === 'admin' || req.user?.role === 'moderator';
-
-  const where = includeInactive || isStaff ? '' : 'WHERE c.is_active = 1';
+  const showInactive = includeInactive || isStaff ? 1 : 0;
 
   const rows = await query(
-    `SELECT ${CATEGORY_FIELDS}, COUNT(p.id) AS postCount
+    `SELECT
+       c.id, c.code, c.name, c.slug, c.description,
+       c.banner_img AS bannerImg, c.accent_hue AS accentHue,
+       c.sort_order AS sortOrder, c.is_active AS isActive,
+       COUNT(p.id) AS postCount
        FROM categories c
        LEFT JOIN posts p ON p.category_id = c.id AND p.status = 'published'
-       ${where}
+      WHERE (? = 1 OR c.is_active = 1)
       GROUP BY c.id
-      ORDER BY c.sort_order ASC, c.name ASC`
+      ORDER BY c.sort_order ASC, c.name ASC`,
+    [showInactive]
   );
 
   res.json(rows);
@@ -37,7 +35,11 @@ export async function getCategory(req, res) {
   const { codeOrSlug } = req.validated.params;
 
   const [category] = await query(
-    `SELECT ${CATEGORY_FIELDS}, COUNT(p.id) AS postCount
+    `SELECT
+       c.id, c.code, c.name, c.slug, c.description,
+       c.banner_img AS bannerImg, c.accent_hue AS accentHue,
+       c.sort_order AS sortOrder, c.is_active AS isActive,
+       COUNT(p.id) AS postCount
        FROM categories c
        LEFT JOIN posts p ON p.category_id = c.id AND p.status = 'published'
       WHERE c.code = ? OR c.slug = ?
@@ -68,9 +70,15 @@ export async function createCategory(req, res) {
     [code, name, finalSlug, description || null, bannerImg || null, accentHue, sortOrder, isActive ? 1 : 0]
   );
 
-  const [category] = await query(`SELECT ${CATEGORY_FIELDS} FROM categories c WHERE c.id = ?`, [
-    result.insertId,
-  ]);
+  const [category] = await query(
+    `SELECT
+       c.id, c.code, c.name, c.slug, c.description,
+       c.banner_img AS bannerImg, c.accent_hue AS accentHue,
+       c.sort_order AS sortOrder, c.is_active AS isActive
+       FROM categories c
+      WHERE c.id = ?`,
+    [result.insertId]
+  );
   res.status(201).json(category);
 }
 
@@ -104,7 +112,15 @@ export async function updateCategory(req, res) {
 
   await query(`UPDATE categories SET ${fields.join(', ')} WHERE id = ?`, [...params, id]);
 
-  const [category] = await query(`SELECT ${CATEGORY_FIELDS} FROM categories c WHERE c.id = ?`, [id]);
+  const [category] = await query(
+    `SELECT
+       c.id, c.code, c.name, c.slug, c.description,
+       c.banner_img AS bannerImg, c.accent_hue AS accentHue,
+       c.sort_order AS sortOrder, c.is_active AS isActive
+       FROM categories c
+      WHERE c.id = ?`,
+    [id]
+  );
   res.json(category);
 }
 

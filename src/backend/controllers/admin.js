@@ -5,27 +5,27 @@ import { logAudit } from '../utils/audit.js';
 export async function listUsers(req, res) {
   const { status, role, q, page, pageSize } = req.validated.query;
 
-  const where = ['1 = 1'];
-  const params = [];
-
-  if (status) {
-    where.push('u.status = ?');
-    params.push(status);
-  }
-  if (role) {
-    where.push('u.role = ?');
-    params.push(role);
-  }
-  if (q) {
-    where.push('(u.username LIKE ? OR u.email LIKE ? OR u.full_name LIKE ?)');
-    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
-  }
-
-  const whereSql = `WHERE ${where.join(' AND ')}`;
+  const statusParam = status ?? null;
+  const roleParam = role ?? null;
+  const qPattern = q ? `%${q}%` : null;
   const offset = (page - 1) * pageSize;
 
+  const params = [
+    statusParam,
+    statusParam,
+    roleParam,
+    roleParam,
+    qPattern,
+    qPattern,
+    qPattern,
+    qPattern,
+  ];
+
   const [{ total }] = await query(
-    `SELECT COUNT(*) AS total FROM users u ${whereSql}`,
+    `SELECT COUNT(*) AS total FROM users u
+      WHERE (? IS NULL OR u.status = ?)
+        AND (? IS NULL OR u.role = ?)
+        AND (? IS NULL OR u.username LIKE ? OR u.email LIKE ? OR u.full_name LIKE ?)`,
     params
   );
 
@@ -35,7 +35,9 @@ export async function listUsers(req, res) {
             u.img
        FROM users u
        LEFT JOIN departments d ON d.id = u.department_id
-       ${whereSql}
+      WHERE (? IS NULL OR u.status = ?)
+        AND (? IS NULL OR u.role = ?)
+        AND (? IS NULL OR u.username LIKE ? OR u.email LIKE ? OR u.full_name LIKE ?)
       ORDER BY (u.status = 'pending') DESC, u.id DESC
       LIMIT ? OFFSET ?`,
     [...params, pageSize, offset]

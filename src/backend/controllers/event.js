@@ -3,45 +3,40 @@ import { ApiError } from '../utils/ApiError.js';
 import { logAudit } from '../utils/audit.js';
 import { toSqlDate } from '../utils/dates.js';
 
-const EVENT_FIELDS = `
-  e.id, e.title, e.description, e.starts_at AS startsAt, e.ends_at AS endsAt,
-  e.all_day AS allDay, e.location, e.kind, e.is_featured AS isFeatured,
-  e.status, e.created_at AS createdAt,
-  e.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName
-`;
-
-const EVENT_JOINS = `
-  FROM events e
-  LEFT JOIN departments d ON d.id = e.department_id
-`;
-
 const isStaff = (user) => user && (user.role === 'admin' || user.role === 'moderator');
 
 export async function listEvents(req, res) {
   const { from, to, kind, page, pageSize } = req.validated.query;
 
-  const where = [];
-  const params = [];
+  const staff = isStaff(req.user) ? 1 : 0;
+  const fromDate = from ? toSqlDate(from) : null;
+  const toDate = to ? toSqlDate(to) : null;
+  const kindParam = kind ?? null;
 
-  if (!isStaff(req.user)) where.push("e.status = 'published'");
-  if (from) {
-    where.push('e.starts_at >= ?');
-    params.push(toSqlDate(from));
-  }
-  if (to) {
-    where.push('e.starts_at <= ?');
-    params.push(toSqlDate(to));
-  }
-  if (kind) {
-    where.push('e.kind = ?');
-    params.push(kind);
-  }
+  const params = [staff, fromDate, fromDate, toDate, toDate, kindParam, kindParam];
 
-  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-
-  const [{ total }] = await query(`SELECT COUNT(*) AS total ${EVENT_JOINS} ${whereSql}`, params);
+  const [{ total }] = await query(
+    `SELECT COUNT(*) AS total
+       FROM events e
+       LEFT JOIN departments d ON d.id = e.department_id
+      WHERE (? = 1 OR e.status = 'published')
+        AND (? IS NULL OR e.starts_at >= ?)
+        AND (? IS NULL OR e.starts_at <= ?)
+        AND (? IS NULL OR e.kind = ?)`,
+    params
+  );
   const items = await query(
-    `SELECT ${EVENT_FIELDS} ${EVENT_JOINS} ${whereSql}
+    `SELECT
+       e.id, e.title, e.description, e.starts_at AS startsAt, e.ends_at AS endsAt,
+       e.all_day AS allDay, e.location, e.kind, e.is_featured AS isFeatured,
+       e.status, e.created_at AS createdAt,
+       e.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName
+       FROM events e
+       LEFT JOIN departments d ON d.id = e.department_id
+      WHERE (? = 1 OR e.status = 'published')
+        AND (? IS NULL OR e.starts_at >= ?)
+        AND (? IS NULL OR e.starts_at <= ?)
+        AND (? IS NULL OR e.kind = ?)
       ORDER BY e.starts_at ASC, e.id ASC
       LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
@@ -55,7 +50,13 @@ export async function upcomingEvents(req, res) {
   const limit = Math.min(Number(req.query.limit) || 4, 20);
 
   const items = await query(
-    `SELECT ${EVENT_FIELDS} ${EVENT_JOINS}
+    `SELECT
+       e.id, e.title, e.description, e.starts_at AS startsAt, e.ends_at AS endsAt,
+       e.all_day AS allDay, e.location, e.kind, e.is_featured AS isFeatured,
+       e.status, e.created_at AS createdAt,
+       e.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName
+       FROM events e
+       LEFT JOIN departments d ON d.id = e.department_id
       WHERE e.status = 'published' AND e.starts_at >= NOW()
       ORDER BY e.starts_at ASC
       LIMIT ?`,
@@ -94,9 +95,17 @@ export async function createEvent(req, res) {
     detail: { title: body.title, startsAt: toSqlDate(body.startsAt) },
   });
 
-  const [event] = await query(`SELECT ${EVENT_FIELDS} ${EVENT_JOINS} WHERE e.id = ?`, [
-    result.insertId,
-  ]);
+  const [event] = await query(
+    `SELECT
+       e.id, e.title, e.description, e.starts_at AS startsAt, e.ends_at AS endsAt,
+       e.all_day AS allDay, e.location, e.kind, e.is_featured AS isFeatured,
+       e.status, e.created_at AS createdAt,
+       e.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName
+       FROM events e
+       LEFT JOIN departments d ON d.id = e.department_id
+      WHERE e.id = ?`,
+    [result.insertId]
+  );
   res.status(201).json(event);
 }
 
@@ -140,7 +149,17 @@ export async function updateEvent(req, res) {
   await query(`UPDATE events SET ${fields.join(', ')} WHERE id = ?`, [...params, id]);
   await logAudit(req, { action: 'event.update', entityType: 'event', entityId: Number(id) });
 
-  const [event] = await query(`SELECT ${EVENT_FIELDS} ${EVENT_JOINS} WHERE e.id = ?`, [id]);
+  const [event] = await query(
+    `SELECT
+       e.id, e.title, e.description, e.starts_at AS startsAt, e.ends_at AS endsAt,
+       e.all_day AS allDay, e.location, e.kind, e.is_featured AS isFeatured,
+       e.status, e.created_at AS createdAt,
+       e.department_id AS departmentId, d.code AS departmentCode, d.name AS departmentName
+       FROM events e
+       LEFT JOIN departments d ON d.id = e.department_id
+      WHERE e.id = ?`,
+    [id]
+  );
   res.json(event);
 }
 

@@ -4,55 +4,55 @@ import { logAudit } from '../utils/audit.js';
 import { toSqlDate } from '../utils/dates.js';
 import { requireFile } from './file.js';
 
-const NOTICE_FIELDS = `
-  n.id, n.title, n.body, n.category, n.priority, n.is_pinned AS isPinned,
-  n.publish_at AS publishAt, n.expires_at AS expiresAt, n.status,
-  n.created_at AS createdAt, n.updated_at AS updatedAt,
-  u.username AS author, u.role AS authorRole,
-  n.attachment_id AS attachmentId,
-  f.filename AS attachmentFilename, f.original_name AS attachmentName,
-  f.mime_type AS attachmentMime, f.kind AS attachmentKind, f.size_bytes AS attachmentSize
-`;
-
-const NOTICE_JOINS = `
-  FROM notices n
-  JOIN users u ON u.id = n.author_id
-  LEFT JOIN files f ON f.id = n.attachment_id
-`;
-
 const isStaff = (user) => user && (user.role === 'admin' || user.role === 'moderator');
 
 export async function listNotices(req, res) {
   const { category, includeExpired, page, pageSize } = req.validated.query;
-  const staff = isStaff(req.user);
+  const staff = isStaff(req.user) ? 1 : 0;
+  // Only staff can narrow by an explicit status; everyone else is pinned to
+  // published by the first predicate below.
+  const statusParam = staff && req.query.status ? req.query.status : null;
+  const includeExpiredParam = includeExpired ? 1 : 0;
+  const categoryParam = category ?? null;
 
-  const where = [];
-  const params = [];
-
-  if (!staff) {
-    where.push("n.status = 'published'");
-  } else if (req.query.status) {
-    where.push('n.status = ?');
-    params.push(req.query.status);
-  }
-
-  if (!includeExpired && !staff) {
-    where.push('(n.expires_at IS NULL OR n.expires_at > NOW())');
-  }
-  if (category) {
-    where.push('n.category = ?');
-    params.push(category);
-  }
-
-  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const params = [
+    staff,
+    statusParam,
+    statusParam,
+    includeExpiredParam,
+    staff,
+    categoryParam,
+    categoryParam,
+  ];
 
   const [{ total }] = await query(
-    `SELECT COUNT(*) AS total ${NOTICE_JOINS} ${whereSql}`,
+    `SELECT COUNT(*) AS total
+       FROM notices n
+       JOIN users u ON u.id = n.author_id
+       LEFT JOIN files f ON f.id = n.attachment_id
+      WHERE (? = 1 OR n.status = 'published')
+        AND (? IS NULL OR n.status = ?)
+        AND (? = 1 OR ? = 1 OR n.expires_at IS NULL OR n.expires_at > NOW())
+        AND (? IS NULL OR n.category = ?)`,
     params
   );
 
   const items = await query(
-    `SELECT ${NOTICE_FIELDS} ${NOTICE_JOINS} ${whereSql}
+    `SELECT
+       n.id, n.title, n.body, n.category, n.priority, n.is_pinned AS isPinned,
+       n.publish_at AS publishAt, n.expires_at AS expiresAt, n.status,
+       n.created_at AS createdAt, n.updated_at AS updatedAt,
+       u.username AS author, u.role AS authorRole,
+       n.attachment_id AS attachmentId,
+       f.filename AS attachmentFilename, f.original_name AS attachmentName,
+       f.mime_type AS attachmentMime, f.kind AS attachmentKind, f.size_bytes AS attachmentSize
+       FROM notices n
+       JOIN users u ON u.id = n.author_id
+       LEFT JOIN files f ON f.id = n.attachment_id
+      WHERE (? = 1 OR n.status = 'published')
+        AND (? IS NULL OR n.status = ?)
+        AND (? = 1 OR ? = 1 OR n.expires_at IS NULL OR n.expires_at > NOW())
+        AND (? IS NULL OR n.category = ?)
       ORDER BY n.is_pinned DESC, n.publish_at DESC, n.id DESC
       LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
@@ -64,7 +64,21 @@ export async function listNotices(req, res) {
 export async function getNotice(req, res) {
   const { id } = req.validated.params;
 
-  const [notice] = await query(`SELECT ${NOTICE_FIELDS} ${NOTICE_JOINS} WHERE n.id = ?`, [id]);
+  const [notice] = await query(
+    `SELECT
+       n.id, n.title, n.body, n.category, n.priority, n.is_pinned AS isPinned,
+       n.publish_at AS publishAt, n.expires_at AS expiresAt, n.status,
+       n.created_at AS createdAt, n.updated_at AS updatedAt,
+       u.username AS author, u.role AS authorRole,
+       n.attachment_id AS attachmentId,
+       f.filename AS attachmentFilename, f.original_name AS attachmentName,
+       f.mime_type AS attachmentMime, f.kind AS attachmentKind, f.size_bytes AS attachmentSize
+       FROM notices n
+       JOIN users u ON u.id = n.author_id
+       LEFT JOIN files f ON f.id = n.attachment_id
+      WHERE n.id = ?`,
+    [id]
+  );
   if (!notice) throw ApiError.notFound('Notice not found!');
 
   if (notice.status !== 'published' && !isStaff(req.user)) {
@@ -104,9 +118,21 @@ export async function createNotice(req, res) {
     detail: { title: body.title, category: body.category },
   });
 
-  const [notice] = await query(`SELECT ${NOTICE_FIELDS} ${NOTICE_JOINS} WHERE n.id = ?`, [
-    result.insertId,
-  ]);
+  const [notice] = await query(
+    `SELECT
+       n.id, n.title, n.body, n.category, n.priority, n.is_pinned AS isPinned,
+       n.publish_at AS publishAt, n.expires_at AS expiresAt, n.status,
+       n.created_at AS createdAt, n.updated_at AS updatedAt,
+       u.username AS author, u.role AS authorRole,
+       n.attachment_id AS attachmentId,
+       f.filename AS attachmentFilename, f.original_name AS attachmentName,
+       f.mime_type AS attachmentMime, f.kind AS attachmentKind, f.size_bytes AS attachmentSize
+       FROM notices n
+       JOIN users u ON u.id = n.author_id
+       LEFT JOIN files f ON f.id = n.attachment_id
+      WHERE n.id = ?`,
+    [result.insertId]
+  );
   res.status(201).json(notice);
 }
 
@@ -152,7 +178,21 @@ export async function updateNotice(req, res) {
   await query(`UPDATE notices SET ${fields.join(', ')} WHERE id = ?`, [...params, id]);
   await logAudit(req, { action: 'notice.update', entityType: 'notice', entityId: Number(id) });
 
-  const [notice] = await query(`SELECT ${NOTICE_FIELDS} ${NOTICE_JOINS} WHERE n.id = ?`, [id]);
+  const [notice] = await query(
+    `SELECT
+       n.id, n.title, n.body, n.category, n.priority, n.is_pinned AS isPinned,
+       n.publish_at AS publishAt, n.expires_at AS expiresAt, n.status,
+       n.created_at AS createdAt, n.updated_at AS updatedAt,
+       u.username AS author, u.role AS authorRole,
+       n.attachment_id AS attachmentId,
+       f.filename AS attachmentFilename, f.original_name AS attachmentName,
+       f.mime_type AS attachmentMime, f.kind AS attachmentKind, f.size_bytes AS attachmentSize
+       FROM notices n
+       JOIN users u ON u.id = n.author_id
+       LEFT JOIN files f ON f.id = n.attachment_id
+      WHERE n.id = ?`,
+    [id]
+  );
   res.json(notice);
 }
 
